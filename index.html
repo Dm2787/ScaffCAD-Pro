@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScaffCAD Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #f8fafc; --card: #ffffff; --primary: #0284c7; --border: #e2e8f0; --text: #1e293b; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        *:focus { outline: none !important; }
+        body { background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 1500px; margin: 0 auto; position: relative; }
+        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+        .header-title-group { display: flex; align-items: baseline; gap: 12px; }
+        h1 { font-size: 1.6rem; color: #0f172a; margin: 0; }
+        .version-tag { font-size: 0.85rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; }
+        .btn-project-manager { background: white; color: #0284c7; border: 1px solid #bae6fd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-project-manager:hover { background: #f0f9ff; border-color: #7dd3fc; }
+        .grid { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
+        .left-column, .right-column { display: flex; flex-direction: column; gap: 20px; }
+        .panel { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        h2 { font-size: 1.1rem; margin-bottom: 15px; color: var(--primary); }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
+        input, select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button:hover { filter: brightness(0.9); }
+        .canvas-container { position: relative; width: 100%; height: 70vh; min-height: 400px; max-height: 800px; background: #f1f5f9; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+        canvas { width: 100%; height: 100%; cursor: grab; user-select: none; -webkit-user-select: none; }
+        canvas:active { cursor: grabbing; }
+        .canvas-actions { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 10px; z-index: 10; }
+        .btn-canvas { background: white; color: #0f172a; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-canvas:hover { background: #f8fafc; }
+        .btn-canvas.primary { background: #0284c7; color: white; border-color: #0284c7; }
+        .btn-canvas.primary:hover { background: #0369a1; }
+        .btn-canvas.draw-active { background: #10b981; color: white; border-color: #059669; }
+        .float-menu { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 25px rgba(0,0,0,0.2); z-index: 1000; padding: 20px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #console-menu { border-top: 4px solid #0ea5e9; } #deck-menu { border-top: 4px solid #f59e0b; z-index: 1001; } #col-menu { border-top: 4px solid #10b981; z-index: 1002; } #free-deck-menu { border-top: 4px solid #64748b; z-index: 1003; }
+        .menu-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;}
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+        .menu-btn { padding: 10px; font-size: 0.85rem; cursor: pointer; font-weight: 600; border-radius: 6px; transition: 0.1s; text-align: center;}
+        .menu-btn.c-btn { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; } .menu-btn.c-btn:hover { background: #e0f2fe; }
+        .menu-btn.d-btn { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; } .menu-btn.d-btn:hover { background: #fef3c7; }
+        .menu-btn.p-btn { background: #f0fdf4; color: #166534; border: 1px solid #86efac; } .menu-btn.p-btn:hover { background: #dcfce7; }
+        .menu-btn.opt-btn { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 8px; font-size: 0.8rem; }
+        .menu-btn.opt-btn.active { background: #0284c7; color: white; border-color: #0284c7; font-weight: bold; }
+        .menu-btn.remove { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; grid-column: 1 / -1; margin-top: 5px;}
+        .menu-btn.reset { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; grid-column: 1 / -1; margin-top: 5px;}
+        .dir-btn { flex: 1; padding: 10px 4px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border-radius: 6px; border: 1px solid #bae6fd; background: #e0f2fe; color: #0369a1; transition: 0.1s;}
+        .dir-btn.active { background: #0284c7; color: white; border-color: #0284c7;}
+        .bay-builder { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+        .scaff-btn { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;}
+        .scaff-btn:hover { background: #bae6fd; }
+        .sequence-ui { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1; max-height: 280px; overflow-y: auto;}
+        .bay-col { display: flex; flex-direction: column; gap: 4px; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .bay-col-header { font-size: 0.75rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0;}
+        .bay-item { background: #f0f9ff; border: 1px solid #0284c7; color: #0284c7; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .trapp-btn { cursor: pointer; opacity: 0.4; transition: 0.2s; font-size: 1.2rem; user-select: none; }
+        .trapp-btn:hover, .trapp-btn.active { opacity: 1; transform: scale(1.15); } .trapp-btn.active { text-shadow: 0 0 8px rgba(139, 92, 246, 0.6); }
+        .wall-chain { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+        .wall-seg { padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .wall-seg.flat { background: #f1f5f9; border: 1px solid #94a3b8; color: #475569; } .wall-seg.recess { background: #fffbeb; border: 1px solid #f59e0b; color: #b45309; } .wall-seg.turn { background: #f3e8ff; border: 1px solid #d946ef; color: #a21caf; }
+        .del { color: #ef4444; cursor: pointer; font-weight: 900; font-size: 1.1rem; }
+        .add-depth-btn { background: #f1f5f9; color: #475569; border: 1px dashed #cbd5e1; font-size: 0.75rem; padding: 4px; border-radius: 4px; margin-top: 2px;} .add-depth-btn.inward { background: #fffbeb; color: #b45309; border-color: #fcd34d; margin-bottom: 2px; }
+        .active-wall-badge { background: #fef08a; color: #166534; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; border: 1px solid #fde047; display: inline-block;}
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.75); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; display: flex; flex-direction: column; }
+        @media (min-width: 768px) { .float-menu { max-width: 450px; left: 50%; transform: translateX(-50%); } }
+        @media (max-width: 1100px) { body { padding: 8px; gap: 10px; } .grid { display: flex; flex-direction: column; } .right-column { order: -1; } .canvas-container { height: 65vh; min-height: 350px; } }
+        @media (max-height: 650px) and (orientation: landscape) { body { padding: 0 !important; gap: 0 !important; background: #f1f5f9; overflow: hidden; } .header, .left-column, #editor-panel { display: none !important; } .grid { display: block !important; } .right-column { padding: 0; width: 100vw; height: 100vh; height: 100dvh; } .right-column .panel { padding: 0 !important; border: none; height: 100%; } .canvas-container { height: 100% !important; border-radius: 0; } #info-box { display: none !important; } .canvas-actions, #draw-mode-ui { bottom: 20px !important; } }
+    </style>
+</head>
+<body onclick="hideMenu(event)">
+
+    <div id="ui-dialog-overlay" class="modal-overlay" style="z-index: 10005;">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <h3 id="ui-dialog-title" style="margin-bottom: 10px;">Tytuł</h3>
+            <p id="ui-dialog-msg" style="margin-bottom: 20px; color: #475569; font-size: 0.95rem;">Wiadomość</p>
+            <div id="ui-dialog-input-container" style="margin-bottom: 20px; display: none;"><input type="text" id="ui-dialog-input" style="width:100%; padding:12px; border:2px solid #cbd5e1; border-radius:8px; text-align:center;" /></div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="ui-dialog-btn-cancel" style="flex: 1; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; display: none;">Anuluj</button>
+                <button id="ui-dialog-btn-ok" style="flex: 1; background: #0284c7; color: white;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BOM (Zestawienie Materiałowe) -->
+    <div id="bom-modal" class="modal-overlay" style="z-index: 10004;">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                <h2 style="margin:0; color:#0f172a; font-size: 1.3rem;">📋 Zestawienie podstawowe</h2>
+                <button onclick="closeBOMModal()" style="background:transparent; color:#64748b; font-size:1.8rem; padding:0; line-height:1; width:30px; height:30px; border:none; cursor:pointer;">×</button>
+            </div>
+            <div id="bom-content-ui" style="overflow-y:auto; max-height: 60vh; padding-right: 5px;"></div>
+            <button onclick="closeBOMModal()" style="width: 100%; margin-top: 15px; padding: 12px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor:pointer;">Zamknij</button>
+        </div>
+    </div>
+
+    <div id="update-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: #0284c7; margin-bottom: 15px; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; flex-shrink: 0;">🚀 Aktualizacja (V39.9.20)</h2>
+            <div style="overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
+                <p style="font-size: 0.95rem; color: #475569; margin-bottom: 15px; line-height: 1.5;">Witaj w nowej wersji <b>ScaffCAD Pro</b>!</p>
+                <ul style="font-size: 0.9rem; color: #334155; margin-left: 20px; margin-bottom: 10px; line-height: 1.7;">
+                    <li><b>Poprawka rysowania:</b> Zoptymalizowano nasłuchiwanie dotyku, odblokowując swobodne szkicowanie na urządzeniach mobilnych.</li>
+                </ul>
+            </div>
+            <button onclick="closeUpdateModal()" style="width: 100%; padding: 14px; font-size: 1.05rem; flex-shrink: 0;">Zrozumiałem, otwórz projekt</button>
+        </div>
+    </div>
+
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                <h2 style="margin:0; color:#0284c7;">📁 Menedżer Projektów</h2>
+                <button onclick="closeProjectModal()" style="background:transparent; color:#64748b; font-size:1.8rem; padding:0; width:30px; height:30px;">×</button>
+            </div>
+            <button onclick="createNewProject()" style="width:100%; margin-bottom:15px; background:#10b981;">➕ Utwórz nowy projekt</button>
+            <div id="project-list-ui" style="display:flex; flex-direction:column; gap:8px; overflow-y:auto; padding-right: 5px;"></div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-title-group"><h1>🏗️ ScaffCAD Pro</h1><span class="version-tag">v39.9.20</span></div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-project-manager" style="background:#10b981; color:white; border-color:#059669;" onclick="openBOMModal()">📋 Zestawienie</button>
+            <button id="btn-proj-manager" class="btn-project-manager" onclick="openProjectModal()">📁 Wczytywanie projektów...</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="left-column">
+            <div class="panel">
+                <h2>1. KREATOR OBRYSU (Zarys Budynku)</h2>
+                <div style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">Całkowity obwód: <b id="ui-total-wall" style="color: #0f172a; font-size: 1rem;">0.00 m</b></div>
+                <button id="btn-draw-mode-panel" onclick="toggleDrawWallMode()" style="width:100%; margin-bottom:12px; background:#0284c7; padding:12px; font-weight:bold; border-radius:8px; display:flex; justify-content:center;">✏️ Włącz rysowanie na siatce (Skok 1 cm)</button>
+                <div style="background: #f8fafc; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display:flex; gap:10px; margin-bottom:10px;"><input type="number" id="inp-w-flat" placeholder="Dł. np. 5.0" style="width:120px;" step="0.1"><button onclick="addFlatWall()" style="flex:1; background:#64748b;">+ Prosta</button></div>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;"><button onclick="addTurn('left')" style="flex:1; background:#8b5cf6;">↰ L (Wewn.)</button><button onclick="addTurn('right')" style="flex:1; background:#d946ef;">↱ P (Zewn.)</button></div>
+                    <div style="display:flex; gap:10px;"><input type="number" id="inp-w-rec" placeholder="Szer." style="width:70px;" step="0.1"><input type="number" id="inp-d-rec" placeholder="Głęb." style="width:70px;" step="0.01"><button onclick="addRecessWall()" style="flex:1; background:#f59e0b; padding:5px;">+ Wnęka</button></div>
+                </div>
+                <div class="wall-chain" id="wall-chain-ui"></div>
+                <div style="display: flex; gap: 8px; margin-top: 15px;"><button onclick="undoWall()" style="background: #eab308; flex: 1;">⮌ Cofnij element</button><button onclick="clearWall()" style="background: #ef4444; flex: 1;">🗑️ Wyczyść obrys</button></div>
+            </div>
+
+            <div class="panel" style="border-color: #6ee7b7; background: #f0fdf4;">
+                <h2 style="color: #047857;">🧩 2. WOLNE BLATY (Wypełnienia luk)</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div class="input-group" style="margin-bottom:0; flex:1;"><label style="color:#047857;">Długość</label><input type="number" id="inp-fd-w" value="1.50" step="0.01" style="border-color:#a7f3d0;"></div>
+                    <div class="input-group" style="margin-bottom:0; flex:1;"><label style="color:#047857;">Szerokość</label><input type="number" id="inp-fd-d" value="0.50" step="0.01" style="border-color:#a7f3d0;"></div>
+                </div>
+                <div style="display: flex; gap: 10px;"><button onclick="addFreeDeck('system')" style="flex:1; background:#0ea5e9;">🔧 Systemowy</button><button onclick="addFreeDeck('wood')" style="flex:1; background:#d97706;">🪵 Deska</button></div>
+            </div>
+
+            <div class="panel">
+                <h2>3. Ustawienia dla NOWYCH ścian</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div class="input-group" style="flex: 1;"><label>Szer. rusztowania [m]</label>
+                        <select id="inp-scaffold-width" onchange="updateWidths(); reqDraw()"><option value="3.05">3.05m</option><option value="2.50">2.50m</option><option value="2.05">2.05m</option><option value="1.96">1.96m</option><option value="1.65">1.65m</option><option value="1.25">1.25m</option><option value="1.01">1.01m</option><option value="0.77" selected>0.77m</option><option value="0.70">0.70m</option><option value="0.56">0.56m</option></select>
+                    </div>
+                    <div class="input-group" style="flex: 1;"><label style="color: #0284c7;">Odsunięcie [m]</label><input type="number" id="inp-offset" step="0.05" value="0.25" style="border-color:#bae6fd; background:#f0f9ff; color:#0284c7;"></div>
+                </div>
+                <div class="input-group"><label style="color: #b45309;">Domyślne konsole (Wnęki) [m]</label>
+                    <select id="inp-console-depth" onchange="reqDraw()" style="border-color:#f59e0b; background:#fffbeb; color:#b45309;"><option value="0" selected>Brak</option><option value="0.77">0.77m</option><option value="0.70">0.70m</option><option value="0.56">0.56m</option><option value="0.46">0.46m</option><option value="0.40">0.40m</option><option value="0.34">0.34m</option><option value="0.30">0.30m</option><option value="0.23">0.23m</option></select>
+                </div>
+            </div>
+            <div class="panel" id="warning-panel" style="display: none; border-color: #fca5a5; background: #fef2f2;"><h2 style="color: #dc2626; margin-bottom: 5px;">⚠️ Ostrzeżenia</h2><div class="warning" id="warning-msg" style="display: none; padding: 0; border: none; margin: 0; background: transparent;"></div></div>
+        </div>
+
+        <div class="right-column">
+            <div class="panel" style="padding: 10px; display: flex; flex-direction: column; gap: 10px; position: relative;">
+                <div id="info-box" style="background: #f0f9ff; border: 1px dashed #bae6fd; padding: 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: #0284c7; text-align: center;">👆 <b>Nawigacja:</b> Przeciągnij by przesunąć, rolka/2 palce by powiększyć. &nbsp;|&nbsp; <b>Konsole:</b> Szczyty 0.56m, 0.70m, 0.77m są aktywnymi węzłami!</div>
+                
+                <div class="canvas-container">
+                    <canvas id="canvas2d"></canvas>
+                    
+                    <div id="draw-mode-ui" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: white; padding: 12px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 100; border: 2px solid #10b981; text-align: center; width: 90%; max-width: 350px;">
+                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px; font-weight: bold;">DŁUGOŚĆ ŚCIANY:</div>
+                        <div id="draw-mode-len" style="font-size: 1.6rem; color: #0f172a; font-weight: 900; margin-bottom: 12px;">Wskaż początek</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="cancelDrawWall(event)" style="flex: 1; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 12px; font-size: 0.9rem;">❌ Zakończ</button>
+                            <button id="btn-draw-confirm" onclick="confirmDrawnWall(event)" style="flex: 2; background: #10b981; color: white; border: none; opacity: 0.5; padding: 12px; font-size: 1rem;" disabled>✅ Zatwierdź</button>
+                        </div>
+                    </div>
+
+                    <div class="canvas-actions">
+                        <button id="btn-draw-mode-canvas" class="btn-canvas" onclick="toggleDrawWallMode()">✏️ Rysuj ścianę (1 cm)</button>
+                        <button class="btn-canvas primary" onclick="exportInteractiveHTML()">📥 Udostępnij (.HTML)</button>
+                        <button class="btn-canvas" onclick="resetView()">🔍 Centruj</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel" id="editor-panel" style="border: 2px solid #fde047; background: #fefce8;">
+                <h2 style="color: #ca8a04;">4. Edytor Niezależnej Ściany</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <div id="active-wall-info" class="active-wall-badge" style="margin-bottom:0;">Wybierz ścianę na rysunku!</div>
+                    <button id="btn-flip-wall" class="scaff-btn" onclick="flipActiveWall()" style="display:none; padding:6px 12px; border-radius:6px; font-weight:bold;">⮂ Przerzuć stronę</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label style="color: #0284c7;">Szer. ruszt. [m]</label>
+                        <select id="inp-active-width" onchange="changeActiveWallWidth()" disabled style="background:#f0f9ff; border-color:#bae6fd; color:#0284c7; padding:9px;">
+                            <option value="3.05">3.05m</option><option value="2.50">2.50m</option><option value="2.05">2.05m</option><option value="1.96">1.96m</option><option value="1.65">1.65m</option><option value="1.25">1.25m</option><option value="1.01">1.01m</option><option value="0.77">0.77m</option><option value="0.70">0.70m</option><option value="0.56">0.56m</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label style="color: #166534;">Oś Y (Odsunięcie) [m]</label>
+                        <div style="display: flex; gap: 2px; align-items: center;">
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1; background:#dcfce7; border-color:#86efac; color:#166534;" onclick="nudgeActiveWall('offset', -0.1)" id="btn-nud-1a" disabled>≪</button>
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1.2; background:#dcfce7; border-color:#86efac; color:#166534;" onclick="nudgeActiveWall('offset', -0.01)" id="btn-nud-1b" disabled>-</button>
+                            <input type="text" id="inp-active-offset" onchange="manualSetActiveWall('offset', this.value)" style="width:75px; text-align:center; font-weight:bold; background:#f0fdf4; border-color:#bbf7d0; color:#166534;">
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1.2; background:#dcfce7; border-color:#86efac; color:#166534;" onclick="nudgeActiveWall('offset', 0.01)" id="btn-nud-2a" disabled>+</button>
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1; background:#dcfce7; border-color:#86efac; color:#166534;" onclick="nudgeActiveWall('offset', 0.1)" id="btn-nud-2b" disabled>≫</button>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label style="color: #b45309;">Oś X (Przesuw) [m]</label>
+                        <div style="display: flex; gap: 2px; align-items: center;">
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1; background:#fef3c7; border-color:#fde047; color:#b45309;" onclick="nudgeActiveWall('shift', -0.5)" id="btn-nud-3a" disabled>≪</button>
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1.2; background:#fef3c7; border-color:#fde047; color:#b45309;" onclick="nudgeActiveWall('shift', -0.01)" id="btn-nud-3b" disabled>-</button>
+                            <input type="text" id="inp-active-shift" onchange="manualSetActiveWall('shift', this.value)" style="width:75px; text-align:center; font-weight:bold; background:#fffbeb; border-color:#fde68a; color:#b45309;">
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1.2; background:#fef3c7; border-color:#fde047; color:#b45309;" onclick="nudgeActiveWall('shift', 0.01)" id="btn-nud-4a" disabled>+</button>
+                            <button class="scaff-btn" style="padding:8px 2px; flex:1; background:#fef3c7; border-color:#fde047; color:#b45309;" onclick="nudgeActiveWall('shift', 0.5)" id="btn-nud-4b" disabled>≫</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bay-builder">
+                    <button class="scaff-btn" onclick="addCol(3.05)">3.05</button><button class="scaff-btn" onclick="addCol(2.50)">2.50</button><button class="scaff-btn" onclick="addCol(2.05)">2.05</button><button class="scaff-btn" onclick="addCol(1.96)">1.96</button><button class="scaff-btn" onclick="addCol(1.65)">1.65</button><button class="scaff-btn" onclick="addCol(1.25)">1.25</button><button class="scaff-btn" onclick="addCol(1.01)">1.01</button><button class="scaff-btn" onclick="addCol(0.77)">0.77</button><button class="scaff-btn" onclick="addCol(0.70)">0.70</button><button class="scaff-btn" onclick="addCol(0.56)">0.56</button>
+                    <div style="width:2px; height:24px; background:#cbd5e1; margin:0 4px;"></div>
+                    <input type="text" id="inp-custom-col" placeholder="Dł. [m]" style="width:70px; padding:6px; border:1px solid #fcd34d; border-radius:6px; background:#fffbeb; text-align:center;">
+                    <button class="scaff-btn" onclick="addCustomCol()" style="background:#f59e0b; color:white; border-color:#d97706; padding:6px 12px;">🪵 Przerzut</button>
+                </div>
+
+                <div class="sequence-ui" id="bay-sequence-ui" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; background:white;"></div>
+                
+                <div style="display:flex; gap:8px; margin-top:15px; margin-bottom:15px;">
+                    <button onclick="undoCol()" style="background:#eab308; flex:1;">⮌ Cofnij pole</button><button onclick="clearCols()" style="background:#ef4444; flex:1;">🗑️ Wyczyść układ</button><button onclick="autoFillActiveWall()" style="background:#10b981; flex:2;">⚡ Dociągnij automatycznie</button>
+                </div>
+
+                <div style="background:#f8fafc; padding:12px; border:1px dashed #cbd5e1; border-radius:8px;">
+                    <label style="color:#475569; margin-bottom:8px; font-weight:700;">🚪 Okna / Drzwi</label>
+                    <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+                        <select id="inp-feat-type" style="flex:1; min-width:80px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"><option value="window">🪟 Okno</option><option value="door">🚪 Drzwi</option></select>
+                        <input type="text" id="inp-feat-w" placeholder="Szer. np. 1.2" style="flex:1; min-width:80px; text-align:center;">
+                        <button class="scaff-btn" onclick="addFeature()" style="background:#3b82f6; color:white;">➕ Dodaj</button>
+                    </div>
+                    <div id="features-list-ui" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOAT MENUS -->
+    <div id="console-menu" class="float-menu">
+        <div class="menu-title" style="color: #0284c7;">Dodaj konsolę:</div>
+        <div style="display:flex; gap:6px; margin-bottom:15px;"><button id="dir-btn-N" class="dir-btn active" onclick="selectConsoleDir('N')">↑ Góra</button><button id="dir-btn-S" class="dir-btn" onclick="selectConsoleDir('S')">↓ Dół</button><button id="dir-btn-W" class="dir-btn" onclick="selectConsoleDir('W')">← Lewo</button><button id="dir-btn-E" class="dir-btn" onclick="selectConsoleDir('E')">→ Prawo</button></div>
+        <div class="menu-grid"><button class="menu-btn c-btn" onclick="setConsole(0.77)">0.77m</button><button class="menu-btn c-btn" onclick="setConsole(0.70)">0.70m</button><button class="menu-btn c-btn" onclick="setConsole(0.56)">0.56m</button><button class="menu-btn c-btn" onclick="setConsole(0.46)">0.46m</button><button class="menu-btn c-btn" onclick="setConsole(0.40)">0.40m</button><button class="menu-btn c-btn" onclick="setConsole(0.34)">0.34m</button><button class="menu-btn c-btn" onclick="setConsole(0.30)">0.30m</button><button class="menu-btn c-btn" onclick="setConsole(0.23)">0.23m</button><button class="menu-btn remove" onclick="setConsole(0)">🗑️ Usuń</button><button class="menu-btn reset" onclick="setConsole(-1)">⮌ Domyślna</button></div>
+    </div>
+
+    <div id="deck-menu" class="float-menu">
+        <div class="menu-title" style="color:#b45309;">Wybierz wymiar BLATU:</div>
+        <div class="menu-grid"><button class="menu-btn d-btn" onclick="setDeck(0.77)">0.77m</button><button class="menu-btn d-btn" onclick="setDeck(0.70)">0.70m</button><button class="menu-btn d-btn" onclick="setDeck(0.56)">0.56m</button><button class="menu-btn d-btn" onclick="setDeck(0.46)">0.46m</button><button class="menu-btn d-btn" onclick="setDeck(0.40)">0.40m</button><button class="menu-btn d-btn" onclick="setDeck(0.34)">0.34m</button><button class="menu-btn d-btn" onclick="setDeck(0.30)">0.30m</button><button class="menu-btn d-btn" onclick="setDeck(0.23)">0.23m</button><button class="menu-btn remove" onclick="setDeck(0)">Dziura</button><button class="menu-btn reset" onclick="setDeck(-1)">⮌ Domyślne</button></div>
+        <div style="margin-top:15px; padding-top:12px; border-top:1px dashed #fcd34d;">
+            <div style="font-size:0.85rem; color:#b45309; margin-bottom:8px; font-weight:bold;">🔧 Wstawki (Adaptery/Deski):</div>
+            <input type="text" id="inp-deck-sub-len" placeholder="Dł. wstawki np. 1.25" style="width:100%; padding:8px; text-align:center; font-weight:bold; margin-bottom:8px;">
+            <div style="display:flex; gap:8px; margin-bottom:10px;"><button onclick="addSubDeck(false)" style="flex:1; background:#f59e0b; color:white; padding:8px; font-weight:bold; border:none; border-radius:6px;">➕ System</button><button onclick="addSubDeck(true)" style="flex:1; background:#92400e; color:white; padding:8px; font-weight:bold; border:none; border-radius:6px;">🪵 Deska</button></div>
+            <div id="sub-decks-list" style="display:flex; flex-direction:column; gap:6px;"></div><button onclick="resetSubDecks()" style="width:100%; margin-top:10px; background:#fffbeb; color:#b45309; padding:8px; font-weight:bold; border:1px solid #fcd34d; border-radius:6px;">⮌ Anuluj wstawki</button>
+        </div>
+    </div>
+
+    <div id="col-menu" class="float-menu" style="border-top:4px solid #10b981;">
+        <div class="menu-title" style="color:#166534;" id="col-menu-title">Edytuj pole</div>
+        <div id="col-length-section">
+            <div style="font-size:0.8rem; font-weight:700; margin-bottom:6px;">Długość pola:</div>
+            <div class="menu-grid"><button class="menu-btn p-btn" onclick="setColLength(3.05)">3.05</button><button class="menu-btn p-btn" onclick="setColLength(2.50)">2.50</button><button class="menu-btn p-btn" onclick="setColLength(2.05)">2.05</button><button class="menu-btn p-btn" onclick="setColLength(1.96)">1.96</button><button class="menu-btn p-btn" onclick="setColLength(1.65)">1.65</button><button class="menu-btn p-btn" onclick="setColLength(1.25)">1.25</button><button class="menu-btn p-btn" onclick="setColLength(1.01)">1.01</button><button class="menu-btn p-btn" onclick="setColLength(0.77)">0.77</button><button class="menu-btn p-btn" onclick="setColLength(0.70)">0.70</button><button class="menu-btn p-btn" onclick="setColLength(0.56)">0.56</button></div>
+        </div>
+        <div style="margin-top:15px; padding-top:12px; border-top:1px dashed #86efac;">
+            <div style="font-size:0.85rem; color:#166534; margin-bottom:8px; font-weight:bold;">📏 Szerokość blach:</div>
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px;"><button id="btn-bw-auto" class="menu-btn opt-btn" onclick="setBayBoardWidth('auto')">⚡ Auto</button><button id="btn-bw-032" class="menu-btn opt-btn" onclick="setBayBoardWidth(0.32)">0.32m</button><button id="btn-bw-023" class="menu-btn opt-btn" onclick="setBayBoardWidth(0.23)">0.23m</button><button id="btn-bw-020" class="menu-btn opt-btn" onclick="setBayBoardWidth(0.20)">0.20m(D)</button></div>
+        </div>
+        <div style="margin-top:5px; padding-top:10px; border-top:1px dashed #86efac;">
+            <div style="font-size:0.85rem; color:#166534; font-weight:bold; margin-bottom:8px;">🧩 Pojedyncze blachy:</div><div id="col-boards-list" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto;"></div>
+        </div>
+        <button id="btn-toggle-all-boards" class="menu-btn remove" onclick="toggleAllBoardsInSegment()">🚫 Usuń wszystkie blachy na tym polu</button>
+        <button class="menu-btn reset" onclick="closeColMenu()">⮌ Zamknij</button>
+    </div>
+
+        <div id="free-deck-menu" class="float-menu">
+        <div class="menu-title" style="color: #475569; border-bottom-color: #cbd5e1;">Opcje Wolnego Blatu <span id="fd-angle-ui" style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:12px; font-size:0.85rem; margin-left:6px; font-weight:900;">0°</span></div>
+        
+        <div style="display: flex; gap: 4px; margin-bottom: 10px;">
+            <button class="scaff-btn" style="flex:1; padding:12px 0; background:#fef3c7; border-color:#fde047; color:#b45309; font-weight:bold;" onclick="nudgeFreeDeckAngle(-5)">≪ 5°</button>
+            <button class="scaff-btn" style="flex:1; padding:12px 0; background:#fef3c7; border-color:#fde047; color:#b45309; font-weight:bold;" onclick="nudgeFreeDeckAngle(-1)">- 1°</button>
+            <button class="scaff-btn" style="flex:2; padding:12px 0; background:#e0f2fe; border-color:#bae6fd; color:#0369a1; font-weight:bold;" onclick="rotateFreeDeck()">✏️ Wpisz</button>
+            <button class="scaff-btn" style="flex:1; padding:12px 0; background:#fef3c7; border-color:#fde047; color:#b45309; font-weight:bold;" onclick="nudgeFreeDeckAngle(1)">+ 1°</button>
+            <button class="scaff-btn" style="flex:1; padding:12px 0; background:#fef3c7; border-color:#fde047; color:#b45309; font-weight:bold;" onclick="nudgeFreeDeckAngle(5)">5° ≫</button>
+        </div>
+        <button class="menu-btn p-btn" style="width: 100%; background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; padding: 12px; margin-bottom: 12px;" onclick="rotateFreeDeck45()">⟳ Obróć o 45°</button>
+
+        <div class="menu-grid" style="grid-template-columns: 1fr;">
+            <button class="menu-btn p-btn" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd; padding: 12px;" onclick="duplicateFreeDeck()">📄 Kopiuj</button>
+            <button class="menu-btn remove" onclick="deleteFreeDeck()">🗑️ Usuń</button>
+            <button class="menu-btn reset" onclick="hideMenu()">⮌ Zamknij</button>
+        </div>
+    </div>
+<div id="draw-angle-badge" style="display:none; position:fixed; top:130px; left:50%; transform:translateX(-50%); background:#1e293b; color:#38bdf8; border:1px solid #0ea5e9; padding:8px 18px; border-radius:20px; font-weight:bold; font-size:1.1rem; z-index:9999; box-shadow:0 4px 6px rgba(0,0,0,0.4); pointer-events:none;">Kąt: 0.0°</div>
+<button id="btn-snap-angle" onclick="toggleSnapAngle(event)" style="position:fixed; top:180px; right:15px; background:#fef3c7; color:#b45309; border:2px solid #fde047; padding:8px 12px; border-radius:12px; font-weight:bold; z-index:9999; box-shadow:0 4px 6px rgba(0,0,0,0.3);">🧲 Kąty: 10°</button>
+<div id="loupe-container" style="display:none; position:fixed; width:120px; height:120px; border:3px solid #0ea5e9; border-radius:50%; overflow:hidden; z-index:9999; box-shadow:0 8px 16px rgba(0,0,0,0.5); pointer-events:none; background:#fff; transform:translate(-50%, -100%);">
+    <canvas id="loupe-canvas" width="120" height="120"></canvas>
+    <div style="position:absolute; top:50%; left:0; right:0; height:1px; background:rgba(239,68,68,0.8); z-index:10;"></div>
+    <div style="position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(239,68,68,0.8); z-index:10;"></div>
+</div>
+
+    <script>
+        window.__HAKI_INJECTED_DATA__ = null; window.__HAKI_VIEWER_MODE__ = false; const CURRENT_VERSION = "v39.9.20";
+        const availableDepths = [3.05, 2.50, 2.05, 1.96, 1.65, 1.25, 1.01, 0.77, 0.70, 0.56];
+        let currentProjectId = null; let currentProjectName = "";
+        let canvas = document.getElementById('canvas2d'); let ctx = canvas.getContext('2d');
+        const dirVec = { 'N':{x:0,y:-1}, 'S':{x:0,y:1}, 'E':{x:1,y:0}, 'W':{x:-1,y:0} };
+        
+        let isDrawWallMode = false; let drawStartPoint = null; let currentSnapPoint = null; let drawState = 0; let lastTouchTime = 0;
+        let isReqDrawPending = false; let isDrawOnlyPending = false;
+
+        function reqDrawOnly() { if(isDrawOnlyPending)return; isDrawOnlyPending=true; requestAnimationFrame(()=>{drawOnly();isDrawOnlyPending=false;}); }
+
+        function customDialog(type, title, message, defaultValue = "") {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('ui-dialog-overlay');
+                document.getElementById('ui-dialog-title').innerHTML = title;
+                document.getElementById('ui-dialog-msg').innerHTML = message;
+                const inpC = document.getElementById('ui-dialog-input-container'), inpE = document.getElementById('ui-dialog-input');
+                const bCan = document.getElementById('ui-dialog-btn-cancel'), bOk = document.getElementById('ui-dialog-btn-ok');
+                if(type==='prompt'){ inpC.style.display='block'; inpE.value=defaultValue; bCan.style.display='block'; }
+                else if(type==='confirm'){ inpC.style.display='none'; bCan.style.display='block'; }
+                else { inpC.style.display='none'; bCan.style.display='none'; }
+                const clean = () => { overlay.style.display='none'; bOk.onclick=null; bCan.onclick=null; window.removeEventListener('keydown', hKey); };
+                const hKey = (e) => { if(e.key==='Enter'){e.preventDefault();bOk.click();} else if(e.key==='Escape'){e.preventDefault();clean(); resolve(type==='prompt'?null:type!=='confirm');} };
+                bOk.onclick=()=>{ let v=inpE.value; clean(); resolve(type==='prompt'?v:true); };
+                bCan.onclick=()=>{ clean(); resolve(type==='prompt'?null:false); };
+                window.addEventListener('keydown', hKey); overlay.style.display='flex';
+                if(type==='prompt') setTimeout(()=>inpE.focus(), 100);
+            });
+        }
+        const uiAlert = (msg) => customDialog('alert', '⚠️ Informacja', msg);
+        const uiConfirm = (msg) => customDialog('confirm', '❓ Pytanie', msg);
+        const uiPrompt = (msg, def = "") => customDialog('prompt', '✏️ Wprowadź dane', msg, def);
+
+        function openBOMModal() {
+            if(geomWallSegs.length === 0 && walls.length > 0) buildGeometry();
+            let stopyCount = allNodes.filter(n => !n.isSpigot).length;
+            let baysCount = {}, customBaysCount = {};
+            walls.forEach(w => {
+                if (w.type === 'flat') {
+                    w.cols.forEach(c => {
+                        let len = c.length.toFixed(2);
+                        if (c.isCustom) customBaysCount[len] = (customBaysCount[len] || 0) + 1;
+                        else baysCount[len] = (baysCount[len] || 0) + 1;
+                    });
+                }
+            });
+            let html = `<div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                <div style="font-size: 0.85rem; color: #0369a1; font-weight: bold; margin-bottom: 5px;">PODSTAWKI ŚRUBOWE (STOPY)</div>
+                <div style="font-size: 2.2rem; color: #0284c7; font-weight: 900; line-height: 1;">${stopyCount}</div></div>`;
+            html += `<div><b style="color:#166534; font-size: 0.9rem;">POLA SYSTEMOWE (Długość):</b></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">`;
+            let sortedBays = Object.keys(baysCount).sort((a,b) => parseFloat(b) - parseFloat(a));
+            if(sortedBays.length === 0) html += `<div style="color:#64748b; font-size:0.9rem; grid-column: 1/-1;">Brak</div>`;
+            sortedBays.forEach(k => { html += `<div style="background: #f0fdf4; border: 1px solid #86efac; padding: 8px 12px; border-radius: 6px; display:flex; justify-content:space-between; align-items: center;"><span style="font-size: 0.85rem; color: #166534; font-weight: 600;">${k} m</span><b style="color:#047857; font-size: 1.1rem;">${baysCount[k]}</b></div>`; });
+            html += `</div>`;
+            let customKeys = Object.keys(customBaysCount);
+            if (customKeys.length > 0) {
+                html += `<div style="margin-top: 15px;"><b style="color:#b45309; font-size: 0.9rem;">PRZERZUTY / DESKI (Niestandardowe):</b></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">`;
+                customKeys.sort((a,b) => parseFloat(b) - parseFloat(a)).forEach(k => { html += `<div style="background: #fffbeb; border: 1px solid #fcd34d; padding: 8px 12px; border-radius: 6px; display:flex; justify-content:space-between; align-items: center;"><span style="font-size: 0.85rem; color: #92400e; font-weight: 600;">${k} m</span><b style="color:#b45309; font-size: 1.1rem;">${customBaysCount[k]}</b></div>`; });
+                html += `</div>`;
+            }
+            document.getElementById('bom-content-ui').innerHTML = html;
+            document.getElementById('bom-modal').style.display = 'flex';
+        }
+        function closeBOMModal() { document.getElementById('bom-modal').style.display = 'none'; }
+
+        function getDirKey(vx, vy) { if(vy<-0.5)return'N'; if(vy>0.5)return'S'; if(vx>0.5)return'E'; if(vx<-0.5)return'W'; return'N'; }
+
+        function getSnappedPoint(rawX, rawY) {
+            let snapX = Math.round(rawX * 100) / 100; let snapY = Math.round(rawY * 100) / 100;
+            let closestVertex = null; let minDist = 0.20; 
+            geomWallSegs.forEach(seg => { [seg.p1, seg.p2].forEach(pt => { let d = Math.hypot(rawX - pt.x, rawY - pt.y); if(d < minDist){ minDist = d; closestVertex = pt; } }); });
+            if(closestVertex) return { x: closestVertex.x, y: closestVertex.y, isVertexSnap: true };
+            return { x: snapX, y: snapY, isVertexSnap: false };
+        }
+
+        function updateDrawUI() {
+            const uiDraw = document.getElementById('draw-mode-ui'); if(!uiDraw || !isDrawWallMode) return;
+            const lenEl = document.getElementById('draw-mode-len'), btnConf = document.getElementById('btn-draw-confirm');
+            if (drawState === 0 || !drawStartPoint || !currentSnapPoint) {
+                lenEl.innerText = 'Wskaż początek'; btnConf.disabled = true; btnConf.style.opacity = '0.5';
+            } else {
+                let len = Math.hypot(currentSnapPoint.x - drawStartPoint.x, currentSnapPoint.y - drawStartPoint.y);
+                if (len >= 0.1) { lenEl.innerText = len.toFixed(2) + ' m'; btnConf.disabled = false; btnConf.style.opacity = '1'; }
+                else { lenEl.innerText = 'Wybierz koniec'; btnConf.disabled = true; btnConf.style.opacity = '0.5'; }
+            }
+        }
+
+        function toggleDrawWallMode() {
+            isDrawWallMode = !isDrawWallMode; drawStartPoint = null; currentSnapPoint = null; drawState = 0;
+            const btnP = document.getElementById('btn-draw-mode-panel'), btnC = document.getElementById('btn-draw-mode-canvas'), iBox = document.getElementById('info-box'), uiDraw = document.getElementById('draw-mode-ui');
+            if (isDrawWallMode) {
+                if(btnP){ btnP.innerText='🛑 Zakończ rysowanie'; btnP.style.background='#10b981'; }
+                if(btnC){ btnC.classList.add('draw-active'); btnC.innerText='🛑 Zamknij tryb rysowania'; }
+                if(iBox) iBox.style.display='none'; if(uiDraw) uiDraw.style.display='block';
+            } else {
+                if(btnP){ btnP.innerText='✏️ Włącz rysowanie na siatce (Skok 1 cm)'; btnP.style.background='#0284c7'; }
+                if(btnC){ btnC.classList.remove('draw-active'); btnC.innerText='✏️ Rysuj ścianę (1 cm)'; }
+                if(iBox) iBox.style.display='block'; if(uiDraw) uiDraw.style.display='none';
+            }
+            updateDrawUI(); reqDraw();
+        }
+
+      function handleDrawMove(wx, wy) {
+    if(drawState === 1 && drawStartPoint) {
+        let d = Math.hypot(wx - drawStartPoint.x, wy - drawStartPoint.y);
+        let deg = Math.atan2(drawStartPoint.y - wy, wx - drawStartPoint.x) * 180 / Math.PI;
+        if (snapWallAngle) deg = Math.round(deg / 10) * 10;
+        let rad = deg * Math.PI / 180;
+        wx = drawStartPoint.x + d * Math.cos(rad); wy = drawStartPoint.y - d * Math.sin(rad);
+    }
+    let s = getSnappedPoint(wx, wy);
+    currentSnapPoint = s; updateDrawUI(); reqDrawOnly();
+}
+
+function handleDrawClick(wx, wy) {
+    if(drawState === 1 && drawStartPoint) {
+        let d = Math.hypot(wx - drawStartPoint.x, wy - drawStartPoint.y);
+        let deg = Math.atan2(drawStartPoint.y - wy, wx - drawStartPoint.x) * 180 / Math.PI;
+        if (snapWallAngle) deg = Math.round(deg / 10) * 10;
+        let rad = deg * Math.PI / 180;
+        wx = drawStartPoint.x + d * Math.cos(rad); wy = drawStartPoint.y - d * Math.sin(rad);
+    }
+    let s = getSnappedPoint(wx, wy);
+    if (drawState === 0) { drawStartPoint = {x: s.x, y: s.y}; drawState = 1; currentSnapPoint = s; }
+    else if (drawState === 1 && drawStartPoint) { currentSnapPoint = s; updateDrawUI(); reqDrawOnly(); }
+}
+
+        function confirmDrawnWall(e) {
+            if(e) e.stopPropagation(); if(!isDrawWallMode || drawState !== 1 || !drawStartPoint || !currentSnapPoint) return;
+            let len = Math.hypot(currentSnapPoint.x - drawStartPoint.x, currentSnapPoint.y - drawStartPoint.y);
+            if (len >= 0.1) {
+                let gOff = parseFloat(document.getElementById('inp-offset').value)||0.25, gWid = parseFloat(document.getElementById('inp-scaffold-width').value)||0.77, id = 'w_' + (wallIdCounter++);
+                walls.push({ id: id, type: 'flat', p1: {x:drawStartPoint.x, y:drawStartPoint.y}, p2: {x:currentSnapPoint.x, y:currentSnapPoint.y}, len: Math.round(len*100)/100, offset: gOff, shift: 0, width: gWid, cols: [], flip: false, features: [] });
+                selectedWallId = id; drawStartPoint = {x:currentSnapPoint.x, y:currentSnapPoint.y}; drawState = 1; updateDrawUI(); reqDraw();
+            }
+        }
+
+        function cancelDrawWall(e) { 
+            if(e) e.stopPropagation(); 
+            if(drawState === 1){ drawStartPoint=null; currentSnapPoint=null; drawState=0; updateDrawUI(); reqDrawOnly(); } 
+            else { toggleDrawWallMode(); } 
+        }
+
+        function getBoardCombo(tDep, isCust, pref = 'auto') {
+            if(isCust || pref === 0.20){ let r=[], d=tDep; while(d>=0.18){r.push(0.20);d-=0.20;} if(!r.length&&tDep>0.05)r.push(Math.round(tDep*100)/100); return r; }
+            if(pref === 0.32){ let r=[], d=tDep; while(d>=0.30){r.push(0.32);d-=0.32;} if(d>=0.21){r.push(0.23);d-=0.23;}else if(d>=0.18){r.push(0.20);d-=0.20;} if(!r.length)r.push(0.32); return r; }
+            if(pref === 0.23){ let r=[], d=tDep; while(d>=0.21){r.push(0.23);d-=0.23;} if(d>=0.18){r.push(0.20);d-=0.20;} if(!r.length)r.push(0.23); return r; }
+            let t = Math.round(tDep*100);
+            const m={125:[0.23,0.23,0.23,0.23,0.23],101:[0.32,0.32,0.32],77:[0.23,0.23,0.23],70:[0.32,0.32],56:[0.23,0.23],165:[0.32,0.32,0.32,0.32,0.32],196:[0.32,0.32,0.32,0.32,0.32,0.32],205:[0.32,0.32,0.32,0.32,0.32,0.32],250:[0.32,0.32,0.32,0.32,0.32,0.32,0.32,0.23],305:[0.32,0.32,0.32,0.32,0.32,0.32,0.32,0.32,0.32],46:[0.23,0.20],40:[0.32],34:[0.23],30:[0.20],23:[0.23]};
+            if(m[t]) return m[t];
+            let r=[], d=tDep-0.06; if(d<0)d=tDep; while(d>=0.32){r.push(0.32);d-=0.32;} while(d>=0.23){r.push(0.23);d-=0.23;} while(d>=0.20){r.push(0.20);d-=0.20;} if(!r.length)r.push(tDep); return r;
+        }
+
+        let wallIdCounter = 1; let walls = []; let nodeConsoles = {}; let bayDecks = {}; let bayDeckLengths = {};
+        let freeDecks = []; let freeDeckCounter = 1; let selectedFreeDeckId = null; let draggingDeck = null; let dragDeckOffsetX = 0; let dragDeckOffsetY = 0; let isDeckMoved = false;
+        let allNodes = []; let interactiveDecks = []; let interactiveCols = []; let edgesMap = {}; let geomWallSegs = []; let scafPathSegs = {};
+        let selectedNodeId = null; let currentConsoleDir = 'N'; let selectedBayId = null; let currentBayFullLen = 0;
+        let selectedColWallId = null; let selectedColIdx = null; let selectedColDepthIdx = 0; let selectedColIsInward = false; let selectedWallId = null;
+        let baseScale = 1; let baseOffsetX = 0; let baseOffsetY = 0; let userZoom = 1.0; let userPanX = 0; let userPanY = 0; let finalScale = 1; let finalOffsetX = 0; let finalOffsetY = 0;
+
+        function getProjectList() { return JSON.parse(localStorage.getItem('scaffcad_project_list') || '[]'); }
+        function saveProjectList(list) { localStorage.setItem('scaffcad_project_list', JSON.stringify(list)); }
+        function addProjectToIndex(id, name) { let l = getProjectList(); l.push({id:id, name:name, modified:Date.now()}); saveProjectList(l); }
+        function updateProjectModified(id) { let l = getProjectList(); let p = l.find(p=>p.id===id); if(p){ p.modified=Date.now(); saveProjectList(l); } }
+        function clearWorkspace() { walls=[]; wallIdCounter=1; nodeConsoles={}; bayDecks={}; bayDeckLengths={}; freeDecks=[]; freeDeckCounter=1; }
+        function parseData(d) { walls=d.walls||[]; wallIdCounter=d.wallIdCounter||1; nodeConsoles=d.nodeConsoles||{}; bayDecks=d.bayDecks||{}; bayDeckLengths=d.bayDeckLengths||{}; freeDecks=d.freeDecks||[]; freeDeckCounter=d.freeDeckCounter||1; }
+        function saveProject() {
+            if(window.__HAKI_VIEWER_MODE__) return;
+            if(!currentProjectId) { currentProjectId = 'proj_'+Date.now(); currentProjectName="Nowy Projekt"; addProjectToIndex(currentProjectId, currentProjectName); }
+            localStorage.setItem('scaffcad_data_'+currentProjectId, JSON.stringify({walls:walls, wallIdCounter:wallIdCounter, nodeConsoles:nodeConsoles, bayDecks:bayDecks, bayDeckLengths:bayDeckLengths, freeDecks:freeDecks, freeDeckCounter:freeDeckCounter}));
+            localStorage.setItem('scaffcad_last_opened', currentProjectId); updateProjectModified(currentProjectId);
+        }
+        function loadProject() {
+            let l = getProjectList();
+            if(!l.length) {
+                currentProjectId = 'proj_'+Date.now(); currentProjectName="Projekt główny"; addProjectToIndex(currentProjectId, currentProjectName);
+                let old = localStorage.getItem('scaffcad_save_v1')||localStorage.getItem('hakiCAD_save_v28')||localStorage.getItem('hakiCAD_save_v27');
+                if(old){try{parseData(JSON.parse(old));}catch(e){}} else {walls.push({id:'w_0',type:'flat',len:5.0,offset:0.25,shift:0,width:0.77,cols:[],flip:false,features:[]});}
+                localStorage.setItem('scaffcad_last_opened', currentProjectId); saveProject();
+            } else {
+                let t = l.find(p=>p.id===localStorage.getItem('scaffcad_last_opened')) || l[0];
+                currentProjectId = t.id; currentProjectName = t.name;
+                let dStr = localStorage.getItem('scaffcad_data_'+currentProjectId);
+                if(dStr) try{parseData(JSON.parse(dStr));}catch(e){} else walls.push({id:'w_0',type:'flat',len:5.0,offset:0.25,shift:0,width:0.77,cols:[],flip:false,features:[]});
+            }
+            updateHeaderProjectName();
+        }
+        function openProjectModal() { renderProjectList(); document.getElementById('project-modal').style.display='flex'; }
+        function closeProjectModal() { document.getElementById('project-modal').style.display='none'; }
+        function renderProjectList() {
+            let l = getProjectList().sort((a,b)=>b.modified-a.modified), ui = document.getElementById('project-list-ui'); ui.innerHTML='';
+            l.forEach(p=>{
+                let d = new Date(p.modified), dStr = d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), isAct = p.id===currentProjectId;
+                ui.innerHTML += `<div style="background:${isAct?'#f0fdf4':'#f8fafc'}; border:1px solid ${isAct?'#10b981':'#cbd5e1'}; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:150px;"><div style="font-weight:bold; color:#0f172a;">${p.name} ${isAct?'<span style="color:#10b981; font-size:0.75rem; border:1px solid #10b981; padding:2px 6px; border-radius:12px;">Aktywny</span>':''}</div><div style="font-size:0.75rem; color:#64748b;">Zapisano: ${dStr}</div></div>
+                    <div style="display:flex; gap:6px;">${!isAct?`<button onclick="switchProject('${p.id}')" style="background:#0284c7; padding:8px 12px; font-size:0.85rem;">📂 Otwórz</button>`:''}<button onclick="renameProject('${p.id}')" style="background:#f59e0b; padding:8px 12px; font-size:0.85rem;">✏️ Zmień</button>${l.length>1?`<button onclick="deleteProject('${p.id}')" style="background:#ef4444; padding:8px 12px; font-size:0.85rem;">🗑️</button>`:''}</div></div>`;
+            });
+        }
+        async function createNewProject() { let n=await uiPrompt("Podaj nazwę:", "Nowy Projekt"); if(!n||!n.trim())return; clearWorkspace(); walls.push({id:'w_'+Date.now(),type:'flat',len:5.0,offset:0.25,shift:0,width:0.77,cols:[],flip:false,features:[]}); currentProjectId='proj_'+Date.now(); currentProjectName=n.trim(); addProjectToIndex(currentProjectId, currentProjectName); localStorage.setItem('scaffcad_last_opened', currentProjectId); saveProject(); updateHeaderProjectName(); selectedWallId=null; selectedColWallId=null; selectedFreeDeckId=null; updateEditorUI(); reqDraw(); closeProjectModal(); }
+        function switchProject(id) { let p=getProjectList().find(x=>x.id===id); if(!p)return; currentProjectId=p.id; currentProjectName=p.name; localStorage.setItem('scaffcad_last_opened', currentProjectId); clearWorkspace(); let d=localStorage.getItem('scaffcad_data_'+id); if(d)try{parseData(JSON.parse(d));}catch(e){} updateHeaderProjectName(); selectedWallId=null; selectedColWallId=null; selectedFreeDeckId=null; updateEditorUI(); reqDraw(); closeProjectModal(); }
+        async function renameProject(id) { let l=getProjectList(), p=l.find(x=>x.id===id); if(!p)return; let n=await uiPrompt("Zmień nazwę:", p.name); if(n&&n.trim()){ p.name=n.trim(); saveProjectList(l); if(id===currentProjectId){currentProjectName=p.name; updateHeaderProjectName();} renderProjectList(); } }
+        async function deleteProject(id) { if(!(await uiConfirm("Trwale usunąć projekt?")))return; let l=getProjectList().filter(x=>x.id!==id); saveProjectList(l); localStorage.removeItem('scaffcad_data_'+id); if(currentProjectId===id)switchProject(l[0].id); else renderProjectList(); }
+        function updateHeaderProjectName() { let b=document.getElementById('btn-proj-manager'); if(b) b.innerHTML = `📁 Projekt: <b>${currentProjectName.length>15?currentProjectName.substring(0,15)+'...':currentProjectName}</b>`; }
+        function exportInteractiveHTML() {
+            const btn = document.querySelector('.btn-canvas.primary'), oTxt = btn.innerText; btn.innerText="⏳"; btn.style.opacity='0.7'; btn.style.pointerEvents='none';
+            setTimeout(()=>{
+                let html = document.documentElement.outerHTML.replace("window.__HAKI_INJECTED_DATA__ = null;", `window.__HAKI_INJECTED_DATA__ = ${JSON.stringify({walls,wallIdCounter,nodeConsoles,bayDecks,bayDeckLengths,freeDecks,freeDeckCounter,globalConsoleDepth:parseFloat(document.getElementById('inp-console-depth').value)||0})};`).replace("window.__HAKI_VIEWER_MODE__ = false;", "window.__HAKI_VIEWER_MODE__ = true;");
+                const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["<!DOCTYPE html>\n<html lang=\"pl\">\n"+html+"\n</html>"],{type:"text/html;charset=utf-8"}));
+                let d = new Date(), sN = currentProjectName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+                l.download=`ScaffCAD_${sN}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.html`; l.click();
+                btn.innerText=oTxt; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+            }, 50);
+        }
+
+        function addFreeDeck(type) { freeDecks.push({id:'fd_'+(freeDeckCounter++), cx:(canvas.clientWidth*2/2-finalOffsetX)/finalScale, cy:(canvas.clientHeight*2/2-finalOffsetY)/finalScale, w:parseFloat(document.getElementById('inp-fd-w').value)||1.5, d:parseFloat(document.getElementById('inp-fd-d').value)||0.5, angle:0, type:type}); reqDraw(); }
+        function getDeckAtPosition(x,y) { for(let i=freeDecks.length-1;i>=0;i--){ let f=freeDecks[i], dx=x-f.cx, dy=y-f.cy, c=Math.cos(-f.angle), s=Math.sin(-f.angle), rx=dx*c-dy*s, ry=dx*s+dy*c; if(rx>=-f.w/2&&rx<=f.w/2&&ry>=-f.d/2&&ry<=f.d/2) return f; } return null; }
+        function updateFreeDeckAngleUI() { let f=freeDecks.find(d=>d.id===selectedFreeDeckId); if(f){ let deg = (f.angle*180/Math.PI)%360; if(deg<0)deg+=360; let el=document.getElementById('fd-angle-ui'); if(el) el.innerText = deg.toFixed(1) + '°'; } }
+let snapWallAngle = true;
+function toggleSnapAngle(e) {
+    if(e) e.stopPropagation();
+    snapWallAngle = !snapWallAngle;
+    let btn = document.getElementById('btn-snap-angle');
+    if(btn) btn.innerText = snapWallAngle ? '🧲 Kąty: 10°' : '✏️ Dowolne';
+}
+
+function updateDrawAngleUI(cx, cy) {
+    let b = document.getElementById('draw-angle-badge');
+    let loupe = document.getElementById('loupe-container');
+    let lCtx = document.getElementById('loupe-canvas') ? document.getElementById('loupe-canvas').getContext('2d') : null;
+    
+    if(!isDrawWallMode || !drawStartPoint) { 
+        if(b) b.style.display = 'none'; 
+        if(loupe) loupe.style.display = 'none';
+        return; 
+    }
+    
+    let r = canvas.getBoundingClientRect();
+    let lx = ((cx - r.left) * (canvas.width / r.width) - finalOffsetX) / finalScale;
+    let ly = ((cy - r.top) * (canvas.height / r.height) - finalOffsetY) / finalScale;
+    
+    let deg = Math.atan2(drawStartPoint.y - ly, lx - drawStartPoint.x) * 180 / Math.PI;
+    if(deg < 0) deg += 360;
+    
+    if (snapWallAngle) { deg = Math.round(deg / 10) * 10; if(deg === 360) deg = 0; } 
+    else { deg = (Math.round(deg * 10) / 10).toFixed(1); }
+    
+    if(b) { b.style.display = 'block'; b.innerText = 'Kąt: ' + deg + '°'; }
+    
+    // Logika Lupy (powiększa wycinek 40x40px do 120x120px)
+    if(loupe && lCtx) {
+        loupe.style.display = 'block';
+        loupe.style.left = cx + 'px';
+        loupe.style.top = (cy - 70) + 'px'; // Unosi lupę 70px nad palcem
+        
+        let sx = (cx - r.left) * (canvas.width / r.width);
+        let sy = (cy - r.top) * (canvas.height / r.height);
+        
+        lCtx.clearRect(0, 0, 120, 120);
+        lCtx.imageSmoothingEnabled = false;
+        lCtx.drawImage(canvas, sx - 20, sy - 20, 40, 40, 0, 0, 120, 120);
+    }
+}
+
+window.addEventListener('mousemove', e => updateDrawAngleUI(e.clientX, e.clientY));
+window.addEventListener('touchmove', e => { if(e.touches.length) updateDrawAngleUI(e.touches[0].clientX, e.touches[0].clientY); });
+window.addEventListener('mouseup', () => { 
+    let b=document.getElementById('draw-angle-badge'), l=document.getElementById('loupe-container'); 
+    if(b) b.style.display='none'; if(l) l.style.display='none'; 
+});
+window.addEventListener('touchend', () => { 
+    let b=document.getElementById('draw-angle-badge'), l=document.getElementById('loupe-container'); 
+    if(b) b.style.display='none'; if(l) l.style.display='none'; 
+});
+
+async function rotateFreeDeck() { let f=freeDecks.find(d=>d.id===selectedFreeDeckId); if(f){ let ans = await uiPrompt("Podaj kąt w stopniach:", (f.angle*180/Math.PI).toFixed(0)); if(ans!==null){ let deg = parseFloat(ans.replace(',','.')); if(!isNaN(deg)){ f.angle = deg * Math.PI / 180; updateFreeDeckAngleUI(); reqDraw(); document.getElementById('free-deck-menu').style.display='none'; } } } }
+function rotateFreeDeck45() { let f=freeDecks.find(d=>d.id===selectedFreeDeckId); if(f){f.angle+=Math.PI/4; updateFreeDeckAngleUI(); reqDraw();} }
+function nudgeFreeDeckAngle(deg) { let f=freeDecks.find(d=>d.id===selectedFreeDeckId); if(f){ f.angle += deg * Math.PI / 180; updateFreeDeckAngleUI(); reqDraw(); } }
+        function duplicateFreeDeck() { let f=freeDecks.find(d=>d.id===selectedFreeDeckId); if(f){freeDecks.push({...f, id:'fd_'+(freeDeckCounter++), cx:f.cx+0.2, cy:f.cy+0.2}); document.getElementById('free-deck-menu').style.display='none'; reqDraw();} }
+function deleteFreeDeck() { freeDecks=freeDecks.filter(d=>d.id!==selectedFreeDeckId); document.getElementById('free-deck-menu').style.display='none'; selectedFreeDeckId=null; reqDraw(); }
+function getWall(id) { return walls.find(w=>w.id===id); } function getActiveWall() { return getWall(selectedWallId); }
+function initCanvas() { canvas.width=canvas.clientWidth*2; canvas.height=canvas.clientHeight*2; if(!window.__HAKI_VIEWER_MODE__) updateEditorUI(); reqDraw(); }
+function showFloatMenu(m,e) { if(window.__HAKI_VIEWER_MODE__)return; if(e)e.stopPropagation(); document.querySelectorAll('.float-menu').forEach(x=>x.style.display='none'); const el=document.getElementById(m); if(el)el.style.display='block'; if(m==='free-deck-menu') updateFreeDeckAngleUI(); }
+
+        function addFlatWall() { let l=parseFloat(document.getElementById('inp-w-flat').value); if(l>0){ let id='w_'+(wallIdCounter++); walls.push({id:id,type:'flat',len:l,offset:parseFloat(document.getElementById('inp-offset').value)||0.25,shift:0,width:parseFloat(document.getElementById('inp-scaffold-width').value)||0.77,cols:[],flip:false,features:[]}); selectedWallId=id; updateEditorUI(); reqDraw(); } }
+        function addTurn(d) { walls.push({type:d}); reqDraw(); }
+        function addRecessWall() { let w=parseFloat(document.getElementById('inp-w-rec').value), d=parseFloat(document.getElementById('inp-d-rec').value), o=parseFloat(document.getElementById('inp-offset').value)||0.25, wi=parseFloat(document.getElementById('inp-scaffold-width').value)||0.77; if(w>0&&d>0){ walls.push({type:'left'},{id:'w_'+(wallIdCounter++),type:'flat',len:d,offset:o,shift:0,width:wi,cols:[],flip:false,features:[]},{type:'right'},{id:'w_'+(wallIdCounter++),type:'flat',len:w,offset:o,shift:0,width:wi,cols:[],flip:false,features:[]},{type:'right'},{id:'w_'+(wallIdCounter++),type:'flat',len:d,offset:o,shift:0,width:wi,cols:[],flip:false,features:[]},{type:'left'}); selectedWallId=walls[walls.length-2].id; updateEditorUI(); reqDraw(); } }
+        function undoWall() { if(walls.length){ let r=walls.pop(); if(selectedWallId===r.id){selectedWallId=null;updateEditorUI();} reqDraw(); } }
+        async function clearWall() { if(!(await uiConfirm("Wyczyścić obrys?")))return; clearWorkspace(); saveProject(); updateEditorUI(); reqDraw(); }
+        function removeWallOp(i) { let r=walls.splice(i,1)[0]; if(r&&r.id===selectedWallId){selectedWallId=null;updateEditorUI();} reqDraw(); }
+        function flipActiveWall() { let w=getActiveWall(); if(w){w.flip=!w.flip; updateEditorUI(); reqDraw();} }
+
+        function calcFeatureGaps(w, fi) {
+            let f=w.features[fi], le=0, re=w.len, col=false;
+            w.features.forEach((o,i)=>{
+                if(i===fi)return; if(!(o.pos+o.width<=f.pos+0.001||o.pos>=f.pos+f.width-0.001))col=true;
+                if(o.pos+o.width<=f.pos+0.001&&o.pos+o.width>le)le=o.pos+o.width; if(o.pos>=f.pos+f.width-0.001&&o.pos<re)re=o.pos;
+            }); return {left:Math.max(0,f.pos-le), right:Math.max(0,re-(f.pos+f.width)), col:col};
+        }
+        async function addFeature() { let w=getActiveWall(); if(!w)return uiAlert("Wybierz ścianę!"); let t=document.getElementById('inp-feat-type').value, v=document.getElementById('inp-feat-w').value.replace(',','.'), wi=v===''?1.0:parseFloat(v); if(isNaN(wi)||wi<=0)return uiAlert("Błąd!"); if(wi>w.len)wi=w.len; w.features=w.features||[]; w.features.push({type:t,pos:0,width:wi}); updateEditorUI(); reqDraw(); }
+        function removeFeature(i) { let w=getActiveWall(); if(w){w.features.splice(i,1); updateEditorUI(); reqDraw();} }
+        function updateFeaturePos(i,v) { let w=getActiveWall(); if(w){let val=parseFloat(v); if(!isNaN(val)){w.features[i].pos=val; document.getElementById('feat-pos-inp-'+i).value=val.toFixed(2); let g=calcFeatureGaps(w,i), el=document.getElementById('feat-gap-'+i); if(el){el.style.color=g.col?'#dc2626':'#0284c7'; el.innerText=g.col?'⚠️ Kolizja':`↔ L ${g.left.toFixed(2)} | P ${g.right.toFixed(2)}`;} reqDraw();}} }
+        function manualSetFeaturePos(i,v) { let w=getActiveWall(); if(w){let val=parseFloat(v.replace(',','.')); if(!isNaN(val)){let f=w.features[i], mx=w.len-f.width; f.pos=val<0?0:(val>mx?mx:val);} updateEditorUI(); reqDraw();} }
+        function nudgeFeature(i,a) { let w=getActiveWall(); if(w){let f=w.features[i], mx=w.len-f.width; f.pos+=a; if(f.pos<0)f.pos=0; if(f.pos>mx)f.pos=mx; updateEditorUI(); reqDraw();} }
+        function renderFeaturesUI() {
+            let ui=document.getElementById('features-list-ui'), w=getActiveWall(); ui.innerHTML='';
+            if(!w||!w.features||!w.features.length) return ui.innerHTML='<span style="font-size:0.85rem;">Brak okien/drzwi.</span>';
+            w.features.forEach((f,i)=>{
+                let col=f.type==='window'?'#0284c7':'#b45309', bg=f.type==='window'?'#f0f9ff':'#fffbeb', mx=Math.max(0,w.len-f.width), g=calcFeatureGaps(w,i);
+                ui.innerHTML+=`<div style="background:${bg}; border:1px solid ${col}; padding:10px; border-radius:6px; margin-bottom:4px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><b style="color:${col};font-size:0.85rem;">${f.type==='window'?'🪟 Okno':'🚪 Drzwi'} (${f.width.toFixed(2)}m)</b><span class="del" onclick="removeFeature(${i})">×</span></div>
+                    <div style="font-size:0.75rem;font-weight:bold;margin-bottom:4px;display:flex;justify-content:space-between;"><span id="feat-gap-${i}" style="color:${g.col?'#dc2626':'#0284c7'};">${g.col?'⚠️ Kolizja':`↔ L ${g.left.toFixed(2)}m | P ${g.right.toFixed(2)}m`}</span></div>
+                    <input type="range" min="0" max="${mx.toFixed(2)}" step="0.01" value="${f.pos}" oninput="updateFeaturePos(${i},this.value)" style="width:100%;margin-bottom:8px;">
+                    <div style="display:flex;gap:2px;"><button class="scaff-btn" onclick="nudgeFeature(${i},-0.5)">≪</button><button class="scaff-btn" onclick="nudgeFeature(${i},-0.01)">-</button><input type="text" id="feat-pos-inp-${i}" value="${f.pos.toFixed(2)}" onchange="manualSetFeaturePos(${i},this.value)" style="width:60px;text-align:center;font-weight:bold;"><button class="scaff-btn" onclick="nudgeFeature(${i},0.01)">+</button><button class="scaff-btn" onclick="nudgeFeature(${i},0.5)">≫</button></div></div>`;
+            });
+        }
+
+        function renderWallSequenceUI() {
+            let ui=document.getElementById('wall-chain-ui'), t=0, c=0; ui.innerHTML='';
+            if(!walls.length)return ui.innerHTML='<span style="font-size:0.85rem;">Brak segmentów.</span>';
+            walls.forEach((o,i)=>{
+                if(o.type==='flat'){ c++; t+=o.len; let a=o.id===selectedWallId?'border-color:#eab308;background:#fef08a;':''; ui.innerHTML+=`<div class="wall-seg flat" style="${a}" onclick="selectWall('${o.id}')">Ściana ${c} (${o.len.toFixed(2)}m) <span class="del" onclick="event.stopPropagation(); removeWallOp(${i})">×</span></div>`; }
+                else ui.innerHTML+=`<div class="wall-seg turn" style="${o.type==='right'?'background:#fce7f3;border-color:#d946ef;color:#a21caf;':''}">${o.type==='left'?'↰ L':'↱ P'} <span class="del" onclick="removeWallOp(${i})">×</span></div>`;
+            }); document.getElementById('ui-total-wall').innerText=t.toFixed(2)+' m';
+        }
+        function selectWall(id) { selectedWallId=id; selectedColWallId=null; selectedColIdx=null; updateEditorUI(); reqDraw(); }
+        function nudgeActiveWall(a,m) { let w=getActiveWall(); if(w){if(a==='offset')w.offset=Math.max(0.1,Math.round((w.offset+m)*100)/100); else w.shift=Math.round((w.shift+m)*100)/100; updateEditorUI(); reqDraw();} }
+        function changeActiveWallWidth() { let w=getActiveWall(); if(w){w.width=parseFloat(document.getElementById('inp-active-width').value)||0.77; w.cols.forEach(c=>{if(c.depths.length)c.depths[0]=w.width;}); reqDraw();} }
+        function manualSetActiveWall(a,v) { let w=getActiveWall(), val=parseFloat(v.replace(',','.')); if(w&&!isNaN(val)){if(a==='offset')w.offset=Math.max(0.1,Math.round(val*100)/100); else w.shift=Math.round(val*100)/100; updateEditorUI(); reqDraw();}else updateEditorUI(); }
+        
+        function updateEditorUI() {
+            let w=getActiveWall(), b=document.getElementById('active-wall-info'), o=document.getElementById('inp-active-offset'), s=document.getElementById('inp-active-shift'), wi=document.getElementById('inp-active-width'), bt=document.getElementById('btn-flip-wall');
+            if(w){
+                let fi=walls.filter(x=>x.type==='flat').findIndex(x=>x.id===w.id); b.innerText=`Edytujesz Ścianę ${fi+1} (${w.len.toFixed(2)}m)`; b.style.background='#fef08a'; b.style.color='#ca8a04';
+                o.value=w.offset.toFixed(2); s.value=w.shift.toFixed(2); wi.disabled=false; wi.value=w.width?w.width.toFixed(2):"0.77";
+                bt.style.display='block'; bt.innerText=w.flip?'⮂ Powrót':'⮂ Przerzuć na drugą stronę';
+                ['btn-nud-1a','btn-nud-1b','btn-nud-2a','btn-nud-2b','btn-nud-3a','btn-nud-3b','btn-nud-4a','btn-nud-4b'].forEach(id=>document.getElementById(id).disabled=false);
+            } else {
+                b.innerText=`Wybierz ścianę!`; b.style.background='#f1f5f9'; b.style.color='#64748b'; o.value='-'; s.value='-'; wi.disabled=true; bt.style.display='none';
+                ['btn-nud-1a','btn-nud-1b','btn-nud-2a','btn-nud-2b','btn-nud-3a','btn-nud-3b','btn-nud-4a','btn-nud-4b'].forEach(id=>document.getElementById(id).disabled=true);
+            }
+            renderBaySequenceUI(); renderFeaturesUI();
+        }
+        function updateWidths() { const bw=parseFloat(document.getElementById('inp-scaffold-width').value)||0.77; walls.forEach(w=>{if(w.type==='flat')w.cols.forEach(c=>{if(c.depths.length)c.depths[0]=bw;});}); }
+
+        async function addCol(l) { let w=getActiveWall(); if(w){ w.cols.push({length:l, depths:[w.width||0.77], inwards:[], depthsTrapp:[false], inwardsTrapp:[], isCustom:false, removedBoards:{}, boardModes:{}}); reqDraw(); } }
+        async function addCustomCol() { let w=getActiveWall(); if(!w)return; let v=parseFloat(document.getElementById('inp-custom-col').value.replace(',','.')); if(v>0){ w.cols.push({length:v, depths:[w.width||0.77], inwards:[], depthsTrapp:[false], inwardsTrapp:[], isCustom:true, removedBoards:{}, boardModes:{}}); reqDraw(); } }
+        function undoCol() { let w=getActiveWall(); if(w&&w.cols.length){w.cols.pop();reqDraw();} }
+        function clearCols() { let w=getActiveWall(); if(w){w.cols=[];reqDraw();} }
+        function removeCol(i) { let w=getActiveWall(); if(w){w.cols.splice(i,1);reqDraw();} }
+        async function addDepthToCol(i) { let w=getActiveWall(), c=await uiPrompt("Wymiar WSZERZ (zewn):","1.25"); if(c&&w){ w.cols[i].depths.push(parseFloat(c)); w.cols[i].depthsTrapp=w.cols[i].depthsTrapp||[]; w.cols[i].depthsTrapp.push(false); reqDraw(); } }
+        function removeDepthFromCol(c,d) { let w=getActiveWall(); if(w&&d>0){w.cols[c].depths.splice(d,1); if(w.cols[c].depthsTrapp)w.cols[c].depthsTrapp.splice(d,1); reqDraw();} }
+        async function addInwardToCol(i) { let w=getActiveWall(), c=await uiPrompt("Wymiar WNĘKI (wewn):","0.77"); if(c&&w){ w.cols[i].inwards=w.cols[i].inwards||[]; w.cols[i].inwardsTrapp=w.cols[i].inwardsTrapp||[]; w.cols[i].inwards.push(parseFloat(c)); w.cols[i].inwardsTrapp.push(false); reqDraw(); } }
+        function removeInwardFromCol(c,i) { let w=getActiveWall(); if(w&&w.cols[c].inwards){w.cols[c].inwards.splice(i,1); if(w.cols[c].inwardsTrapp)w.cols[c].inwardsTrapp.splice(i,1); reqDraw();} }
+        function toggleTrapp(id,c,t,i) { let w=getWall(id); if(w){ let col=w.cols[c]; if(t==='depths'){col.depthsTrapp=col.depthsTrapp||[]; col.depthsTrapp[i]=!col.depthsTrapp[i];}else{col.inwardsTrapp=col.inwardsTrapp||[]; col.inwardsTrapp[i]=!col.inwardsTrapp[i];} reqDraw(); } }
+
+        async function autoFillActiveWall() {
+            let w=getActiveWall(); if(!w)return; buildGeometry(); let p=scafPathSegs[w.id], f=geomWallSegs.find(s=>s.id===w.id); if(!p||!f)return;
+            let bsx=f.p1.x+f.nx*w.offset, bsy=f.p1.y+f.ny*w.offset;
+            if(!w.cols.length) { document.getElementById('inp-active-shift').value=(w.shift=Math.round(((p.p1.x-bsx)*f.dirX+(p.p1.y-bsy)*f.dirY)*100)/100).toFixed(2); }
+            let rem=Math.round((((p.p2.x-bsx)*f.dirX+(p.p2.y-bsy)*f.dirY) - (w.shift+w.cols.reduce((s,c)=>s+c.length,0)))*100)/100, bw=w.width||0.77;
+            while(rem>=0.05){ let a=false; for(let b of availableDepths){if(rem>=b-0.02){w.cols.push({length:b, depths:[bw], inwards:[], depthsTrapp:[false], inwardsTrapp:[], isCustom:false, removedBoards:{}, boardModes:{}}); rem=Math.round((rem-b)*100)/100; a=true; break;}} if(!a){w.cols.push({length:0.56, depths:[bw], inwards:[], depthsTrapp:[false], inwardsTrapp:[], isCustom:false, removedBoards:{}, boardModes:{}}); rem=Math.round((rem-0.56)*100)/100;} }
+            updateEditorUI(); reqDraw();
+        }
+
+        function renderBaySequenceUI() {
+            let ui=document.getElementById('bay-sequence-ui'), w=getActiveWall(); ui.innerHTML='';
+            if(!w||!w.cols.length) return ui.innerHTML='<span style="font-size:0.9rem;">Brak pól.</span>';
+            w.cols.forEach((c,ci)=>{
+                let act=(w.id===selectedColWallId&&ci===selectedColIdx&&selectedColDepthIdx===0&&!selectedColIsInward), st=act?'border:2px solid #10b981;background:#f0fdf4;':(c.isCustom?'border:1px solid #fcd34d;background:#fffbeb;':'border:1px solid #bae6fd;background:white;');
+                let h=`<div class="bay-col" style="${st}"><div class="bay-col-header" style="${act?'color:#166534;':(c.isCustom?'color:#92400e;':'')}">${c.isCustom?`🪵 Przerzut: ${c.length.toFixed(2)}m`:`Oś: ${c.length.toFixed(2)}m`} <span class="del" onclick="removeCol(${ci})">×</span></div><button class="add-depth-btn inward" onclick="addInwardToCol(${ci})">➕ Wpuść we wnękę</button>`;
+                if(c.inwards) [...c.inwards].reverse().forEach((d,ri)=>{ let i=c.inwards.length-1-ri, tr=c.inwardsTrapp&&c.inwardsTrapp[i], sub=(w.id===selectedColWallId&&ci===selectedColIdx&&selectedColDepthIdx===i&&selectedColIsInward); h+=`<div class="bay-item" style="${sub?'background:#dcfce7;border-color:#10b981;color:#166534;':(tr?'background:#ede9fe;border-color:#a78bfa;color:#6d28d9;':'background:#fef3c7;border-color:#fcd34d;color:#b45309;')}"><span>⮤ Wnęka: ${d.toFixed(2)}m</span><div><span class="trapp-btn ${tr?'active':''}" onclick="toggleTrapp('${w.id}',${ci},'inwards',${i})">🪜</span><span class="del" onclick="removeInwardFromCol(${ci},${i})">×</span></div></div>`; });
+                c.depths.forEach((d,i)=>{ let tr=c.depthsTrapp&&c.depthsTrapp[i], sub=(w.id===selectedColWallId&&ci===selectedColIdx&&selectedColDepthIdx===i&&!selectedColIsInward); h+=`<div class="bay-item" style="${sub?'background:#dcfce7;border-color:#10b981;color:#166534;':(tr?'background:#ede9fe;border-color:#a78bfa;color:#6d28d9;':(i===0?'background:#e0f2fe;border-color:#7dd3fc;':''))}"><span>${i===0?'Baza':'+ Wszerz'}: ${d.toFixed(2)}m</span><div><span class="trapp-btn ${tr?'active':''}" onclick="toggleTrapp('${w.id}',${ci},'depths',${i})">🪜</span>${i>0?`<span class="del" onclick="removeDepthFromCol(${ci},${i})">×</span>`:''}</div></div>`; });
+                ui.innerHTML+=h+`<button class="add-depth-btn" onclick="addDepthToCol(${ci})">➕ Dodaj wszerz</button></div>`;
+            });
+        }
+
+        function getLineIntersection(l1,l2){ let d=(l1.p1.x-l1.p2.x)*(l2.p1.y-l2.p2.y)-(l1.p1.y-l1.p2.y)*(l2.p1.x-l2.p2.x); if(Math.abs(d)<0.001)return null; return{x:((l1.p1.x*l1.p2.y-l1.p1.y*l1.p2.x)*(l2.p1.x-l2.p2.x)-(l1.p1.x-l1.p2.x)*(l2.p1.x*l2.p2.y-l2.p1.y*l2.p2.x))/d, y:((l1.p1.x*l1.p2.y-l1.p1.y*l1.p2.x)*(l2.p1.y-l2.p2.y)-(l1.p1.y-l1.p2.y)*(l2.p1.x*l2.p2.y-l2.p1.y*l2.p2.x))/d}; }
+
+        function buildGeometry() {
+            geomWallSegs=[]; scafPathSegs={}; let cx=0,cy=0,dir=0,dirs=[{x:1,y:0},{x:0,y:1},{x:-1,y:0},{x:0,y:-1}],fi=0;
+            walls.forEach(o=>{
+                if(o.type==='flat'){ fi++; let nx,ny,dx,dy,l; if(o.p1&&o.p2){cx=o.p1.x;cy=o.p1.y;nx=o.p2.x;ny=o.p2.y;l=Math.hypot(nx-cx,ny-cy);dx=l>0?(nx-cx)/l:1;dy=l>0?(ny-cy)/l:0;}else{nx=cx+o.len*dirs[dir].x;ny=cy+o.len*dirs[dir].y;dx=dirs[dir].x;dy=dirs[dir].y;l=o.len;}
+                geomWallSegs.push({id:o.id, wallNum:fi, p1:{x:cx,y:cy}, p2:{x:nx,y:ny}, dirX:dx, dirY:dy, len:l, offset:o.offset, flip:o.flip||false}); cx=nx; cy=ny; }
+                else if(o.type==='left')dir=(dir+3)%4; else if(o.type==='right')dir=(dir+1)%4;
+            });
+            if(!geomWallSegs.length)return;
+            geomWallSegs.forEach(f=>{ f.nx=-f.dirY*(f.flip?-1:1); f.ny=f.dirX*(f.flip?-1:1); f.L={p1:{x:f.p1.x+f.nx*f.offset, y:f.p1.y+f.ny*f.offset}, p2:{x:f.p2.x+f.nx*f.offset, y:f.p2.y+f.ny*f.offset}}; });
+            geomWallSegs.forEach((f,i)=>{ let s=f.L.p1, e=f.L.p2; geomWallSegs.forEach((o,j)=>{ if(i===j)return; if(Math.hypot(f.p1.x-o.p2.x, f.p1.y-o.p2.y)<0.05){let it=getLineIntersection(o.L,f.L); if(it)s=it;} if(Math.hypot(f.p2.x-o.p1.x, f.p2.y-o.p1.y)<0.05){let it=getLineIntersection(f.L,o.L); if(it)e=it;} });
+            scafPathSegs[f.id] = {p1:s, p2:e, dirX:f.dirX, dirY:f.dirY, nx:f.nx, ny:f.ny, len:Math.hypot(e.x-s.x, e.y-s.y)}; });
+        }
+
+        function pointInPolygon(p, vs) { let x=p.x, y=p.y, inS=false; for(let i=0, j=vs.length-1; i<vs.length; j=i++){ if(((vs[i].y>y)!=(vs[j].y>y)) && (x<(vs[j].x-vs[i].x)*(y-vs[i].y)/(vs[j].y-vs[i].y)+vs[i].x)) inS=!inS; } return inS; }
+        function rayIntersect(O, D, A, B) { let v1={x:O.x-A.x,y:O.y-A.y}, v2={x:B.x-A.x,y:B.y-A.y}, v3={x:-D.y,y:D.x}, dot=v2.x*v3.x+v2.y*v3.y; if(Math.abs(dot)<0.000001)return null; let t1=(v2.x*v1.y-v2.y*v1.x)/dot, t2=(v1.x*v3.x+v1.y*v3.y)/dot; return (t1>=-0.01&&t2>=-0.01&&t2<=1.01)?t1:null; }
+        function getDistToWall(np, wd) { let m=Infinity; geomWallSegs.forEach(s=>{let t=rayIntersect(np,wd,s.p1,s.p2); if(t!==null&&t>=-0.01&&t<m)m=t;}); return m===Infinity?999:m; }
+        function distToLine(p, v, w) { let l2=Math.pow(v.x-w.x,2)+Math.pow(v.y-w.y,2); if(!l2)return Math.hypot(p.x-v.x,p.y-v.y); let t=Math.max(0,Math.min(1,((p.x-v.x)*(w.x-v.x)+(p.y-v.y)*(w.y-v.y))/l2)); return Math.hypot(p.x-(v.x+t*(w.x-v.x)), p.y-(v.y+t*(w.y-v.y))); }
+
+        function getCanvasMouse(e) { let r=canvas.getBoundingClientRect(), mx=(e.clientX-r.left)*(canvas.width/r.width), my=(e.clientY-r.top)*(canvas.height/r.height); return {x:(mx-finalOffsetX)/finalScale, y:(my-finalOffsetY)/finalScale, rawX:mx, rawY:my}; }
+
+        function attachCanvasListeners() {
+            canvas.addEventListener('contextmenu', e=>{e.preventDefault(); if(isDrawWallMode){drawStartPoint=null;reqDrawOnly();}});
+            window.addEventListener('keydown', e=>{if(e.key==='Escape'&&isDrawWallMode){if(drawStartPoint){drawStartPoint=null;reqDrawOnly();}else toggleDrawWallMode();}});
+            
+            canvas.addEventListener('mousedown', e=>{
+                if(e.button===2)return;
+                if(Date.now() - lastTouchTime < 500) return;
+                let m=getCanvasMouse(e);
+                if(isDrawWallMode){ handleDrawClick(m.x, m.y); return; }
+                draggingDeck=getDeckAtPosition(m.x,m.y);
+                if(draggingDeck&&!window.__HAKI_VIEWER_MODE__){dragDeckOffsetX=m.x-draggingDeck.cx; dragDeckOffsetY=m.y-draggingDeck.cy; isDeckMoved=false; e.stopPropagation();}
+                else{dragStartX=m.rawX; dragStartY=m.rawY; isDraggingView=true; didDrag=false;}
+            });
+            
+            canvas.addEventListener('mousemove', e=>{
+                let m=getCanvasMouse(e);
+                if(isDrawWallMode){ handleDrawMove(m.x, m.y); return; }
+                if(draggingDeck){draggingDeck.cx=m.x-dragDeckOffsetX; draggingDeck.cy=m.y-dragDeckOffsetY; isDeckMoved=true; reqDrawOnly(); return;}
+                if(isDraggingView){let dx=m.rawX-dragStartX, dy=m.rawY-dragStartY; if(Math.hypot(dx,dy)>5)didDrag=true; if(didDrag){userPanX+=dx; userPanY+=dy; dragStartX=m.rawX; dragStartY=m.rawY; reqDrawOnly();} return;}
+                if(window.__HAKI_VIEWER_MODE__){canvas.style.cursor=isDraggingView?'grabbing':'grab';return;}
+                let hv=false; if(getDeckAtPosition(m.x,m.y))hv=true;
+                if(!hv)allNodes.forEach(n=>{if(Math.hypot(m.x-n.x,m.y-n.y)*finalScale<25)hv=true;}); if(!hv)interactiveDecks.forEach(d=>{if(pointInPolygon(m,[d.p1,d.p2,d.p3,d.p4]))hv=true;}); if(!hv)interactiveCols.forEach(c=>{if(pointInPolygon(m,c.poly))hv=true;}); if(!hv)geomWallSegs.forEach(s=>{if(distToLine(m,s.p1,s.p2)*finalScale<20)hv=true;});
+                canvas.style.cursor=hv?'pointer':'grab';
+            });
+            
+            canvas.addEventListener('wheel', e=>{
+                e.preventDefault(); let r=canvas.getBoundingClientRect(), mx=(e.clientX-r.left)*(canvas.width/r.width), my=(e.clientY-r.top)*(canvas.height/r.height), nz=Math.max(0.05,Math.min(150,userZoom*(e.deltaY<0?1.15:0.85))), f=nz/userZoom;
+                userPanX=mx-baseOffsetX-(mx-baseOffsetX-userPanX)*f; userPanY=my-baseOffsetY-(my-baseOffsetY-userPanY)*f; userZoom=nz; reqDrawOnly();
+            },{passive:false});
+            
+            canvas.addEventListener('touchstart', e=>{
+                lastTouchTime = Date.now();
+                if(e.touches.length===2){ isDraggingView=false; didDrag=true; e.preventDefault(); initialPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); initialPinchZoom=userZoom; }
+                else if(e.touches.length===1) {
+                    let r=canvas.getBoundingClientRect(), rx=(e.touches[0].clientX-r.left)*(canvas.width/r.width), ry=(e.touches[0].clientY-r.top)*(canvas.height/r.height), wx=(rx-finalOffsetX)/finalScale, wy=(ry-finalOffsetY)/finalScale;
+                    if(isDrawWallMode) { e.preventDefault(); handleDrawClick(wx, wy); return; }
+                    draggingDeck=getDeckAtPosition(wx,wy); if(draggingDeck&&!window.__HAKI_VIEWER_MODE__){dragDeckOffsetX=wx-draggingDeck.cx; dragDeckOffsetY=wy-draggingDeck.cy; isDeckMoved=false;}else{dragStartX=rx; dragStartY=ry; isDraggingView=true; didDrag=false;}
+                }
+            },{passive:false});
+            
+            canvas.addEventListener('touchmove', e=>{
+                if(isDrawWallMode){ e.preventDefault(); let r=canvas.getBoundingClientRect(), wx=((e.touches[0].clientX-r.left)*(canvas.width/r.width)-finalOffsetX)/finalScale, wy=((e.touches[0].clientY-r.top)*(canvas.height/r.height)-finalOffsetY)/finalScale; handleDrawMove(wx, wy); return; }
+                if(e.touches.length===1&&draggingDeck){ e.preventDefault(); let r=canvas.getBoundingClientRect(); draggingDeck.cx=((e.touches[0].clientX-r.left)*(canvas.width/r.width)-finalOffsetX)/finalScale-dragDeckOffsetX; draggingDeck.cy=((e.touches[0].clientY-r.top)*(canvas.height/r.height)-finalOffsetY)/finalScale-dragDeckOffsetY; isDeckMoved=true; reqDrawOnly(); return; }
+                if(e.touches.length===2&&initialPinchDist){ e.preventDefault(); let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY), cx=(e.touches[0].clientX+e.touches[1].clientX)/2, cy=(e.touches[0].clientY+e.touches[1].clientY)/2, r=canvas.getBoundingClientRect(), mx=(cx-r.left)*(canvas.width/r.width), my=(cy-r.top)*(canvas.height/r.height), nz=Math.max(0.05,Math.min(150,initialPinchZoom*(d/initialPinchDist))), f=nz/userZoom; userPanX=mx-baseOffsetX-(mx-baseOffsetX-userPanX)*f; userPanY=my-baseOffsetY-(my-baseOffsetY-userPanY)*f; userZoom=nz; reqDrawOnly(); }
+                else if(e.touches.length===1&&isDraggingView){ let r=canvas.getBoundingClientRect(), mx=(e.touches[0].clientX-r.left)*(canvas.width/r.width), my=(e.touches[0].clientY-r.top)*(canvas.height/r.height), dx=mx-dragStartX, dy=my-dragStartY; if(Math.hypot(dx,dy)>15)didDrag=true; if(didDrag){e.preventDefault();userPanX+=dx;userPanY+=dy;dragStartX=mx;dragStartY=my;reqDrawOnly();} }
+            },{passive:false});
+            
+            canvas.addEventListener('touchend', ()=>{ isDraggingView=false; initialPinchDist=null; if(draggingDeck&&isDeckMoved)saveProject(); draggingDeck=null; });
+            window.addEventListener('mouseup', ()=>{ isDraggingView=false; if(draggingDeck&&isDeckMoved)saveProject(); draggingDeck=null; });
+            
+            canvas.addEventListener('click', e=>{
+                if(isDeckMoved||didDrag){isDeckMoved=false;didDrag=false;e.stopPropagation();return;}
+                if(isDrawWallMode) return; 
+                let m=getCanvasMouse(e);
+                
+                document.querySelectorAll('.float-menu').forEach(x=>x.style.display='none'); selectedNodeId=null;
+                let cF=getDeckAtPosition(m.x,m.y); if(cF){selectedColWallId=null; selectedColIdx=null; selectedFreeDeckId=cF.id; showFloatMenu('free-deck-menu',e); reqDraw(); return;}
+                let cN=null, nD=25/finalScale; allNodes.forEach(n=>{let d=Math.hypot(m.x-n.x,m.y-n.y); if(d<nD){nD=d;cN=n;}}); if(cN){selectedColWallId=null; selectedColIdx=null; selectedNodeId=cN.id; selectConsoleDir(getDirKey(cN.wallDirX,cN.wallDirY)||'N'); showFloatMenu('console-menu',e); reqDraw(); return;}
+                let cD=null; interactiveDecks.forEach(d=>{if(pointInPolygon(m,[d.p1,d.p2,d.p3,d.p4]))cD=d;}); if(cD){selectedColWallId=null; selectedColIdx=null; selectedBayId=cD.id; currentBayFullLen=cD.fullW; renderSubDecksUI(); showFloatMenu('deck-menu',e); reqDraw(); return;}
+                let cC=null; interactiveCols.forEach(c=>{if(pointInPolygon(m,c.poly))cC=c;}); if(cC){selectWall(cC.wallId); selectedColWallId=cC.wallId; selectedColIdx=cC.cIdx; selectedColDepthIdx=cC.dIdx||0; selectedColIsInward=!!cC.isInward; populateColMenu(); showFloatMenu('col-menu',e); reqDraw(); return;}
+                let cW=null, mWD=20/finalScale; geomWallSegs.forEach(s=>{let d=distToLine(m,s.p1,s.p2); if(d<mWD){mWD=d;cW=s.id;}}); if(cW){selectedColWallId=null; selectedColIdx=null; selectWall(cW);}else{selectedColWallId=null; selectedColIdx=null; reqDraw();}
+            });
+        }
+
+        function resetView() { userZoom=1.0; userPanX=0; userPanY=0; reqDrawOnly(); }
+
+        function reqDraw() {
+            if(isReqDrawPending)return; isReqDrawPending=true;
+            requestAnimationFrame(()=>{
+                if(!window.__HAKI_VIEWER_MODE__){saveProject();renderWallSequenceUI();updateEditorUI();}
+                buildGeometry();
+                if(geomWallSegs.length){
+                    let bx=[], by=[]; geomWallSegs.forEach(s=>{bx.push(s.p1.x,s.p2.x);by.push(s.p1.y,s.p2.y);}); Object.values(scafPathSegs).forEach(s=>{bx.push(s.p1.x,s.p2.x);by.push(s.p1.y,s.p2.y);}); freeDecks.forEach(f=>{bx.push(f.cx-f.w,f.cx+f.w);by.push(f.cy-f.d,f.cy+f.d);});
+                    let mnX=Math.min(...bx)-5, mxX=Math.max(...bx)+5, mnY=Math.min(...by)-5, mxY=Math.max(...by)+5, bW=mxX-mnX, bH=mxY-mnY;
+                    baseScale=Math.max(1, Math.min((canvas.clientWidth*2-100)/bW, (canvas.clientHeight*2-100)/bH));
+                    baseOffsetX=canvas.clientWidth-(mnX+bW/2)*baseScale; baseOffsetY=canvas.clientHeight-(mnY+bH/2)*baseScale;
+                }
+                drawOnly(); isReqDrawPending=false;
+            });
+        }
+
+        function drawOnly() {
+            const w=canvas.clientWidth*2, h=canvas.clientHeight*2; ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle='#f1f5f9'; ctx.fillRect(0,0,w,h);
+            if(!geomWallSegs.length && !isDrawWallMode) return;
+            finalScale=baseScale*userZoom; finalOffsetX=baseOffsetX+userPanX; finalOffsetY=baseOffsetY+userPanY; ctx.translate(finalOffsetX,finalOffsetY); ctx.scale(finalScale,finalScale);
+            let gs=(w/finalScale>500)?10:5; ctx.lineWidth=1/finalScale;
+            for(let x=Math.floor(-finalOffsetX/finalScale/gs)*gs; x<=w/finalScale; x+=gs){ ctx.beginPath(); ctx.moveTo(x,-finalOffsetY/finalScale); ctx.lineTo(x,(h-finalOffsetY)/finalScale); ctx.strokeStyle=x===0?'rgba(148,163,184,0.8)':'rgba(203,213,225,0.5)'; ctx.stroke(); }
+            for(let y=Math.floor(-finalOffsetY/finalScale/gs)*gs; y<=h/finalScale; y+=gs){ ctx.beginPath(); ctx.moveTo(-finalOffsetX/finalScale,y); ctx.lineTo((w-finalOffsetX)/finalScale,y); ctx.strokeStyle=y===0?'rgba(148,163,184,0.8)':'rgba(203,213,225,0.5)'; ctx.stroke(); }
+
+            geomWallSegs.forEach(s=>{
+                ctx.beginPath(); ctx.moveTo(s.p1.x,s.p1.y); ctx.lineTo(s.p2.x,s.p2.y); ctx.lineWidth=(s.id===selectedWallId)?8/finalScale:4/finalScale; ctx.strokeStyle=(s.id===selectedWallId)?'#eab308':'#475569'; ctx.lineJoin='round'; ctx.stroke();
+                if(s.id===selectedWallId){ctx.beginPath(); ctx.moveTo(s.p1.x,s.p1.y); ctx.lineTo(s.p2.x,s.p2.y); ctx.lineWidth=4/finalScale; ctx.strokeStyle='#ca8a04'; ctx.stroke();}
+                let wD=getWall(s.id); if(wD&&wD.features) wD.features.forEach(f=>{ let fx1=s.p1.x+s.dirX*f.pos, fy1=s.p1.y+s.dirY*f.pos, fx2=fx1+s.dirX*f.width, fy2=fy1+s.dirY*f.width; ctx.beginPath(); ctx.moveTo(fx1,fy1); ctx.lineTo(fx2,fy2); ctx.strokeStyle=f.type==='window'?'#38bdf8':'#b45309'; ctx.lineWidth=(f.type==='window'?10:12)/finalScale; ctx.stroke(); ctx.save(); ctx.translate((fx1+fx2)/2-s.nx*20/finalScale, (fy1+fy2)/2-s.ny*20/finalScale); let a=Math.atan2(s.dirY,s.dirX); if(a>Math.PI/2||a<-Math.PI/2)a+=Math.PI; ctx.rotate(a); ctx.font='bold '+(22/finalScale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'; let ts=`${f.type==='window'?'Okno':'Drzwi'} ${f.width.toFixed(2)}m`, tw=ctx.measureText(ts).width; ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(-tw/2-4/finalScale, -12/finalScale, tw+8/finalScale, 24/finalScale); ctx.fillStyle=f.type==='window'?'#0369a1':'#92400e'; ctx.fillText(ts,0,0); ctx.restore(); });
+                ctx.save(); ctx.translate((s.p1.x+s.p2.x)/2-s.nx*60/finalScale, (s.p1.y+s.p2.y)/2-s.ny*60/finalScale); let a=Math.atan2(s.p2.y-s.p1.y,s.p2.x-s.p1.x); if(a>Math.PI/2||a<-Math.PI/2)a+=Math.PI; ctx.rotate(a); ctx.font='bold '+(28/finalScale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'; let ws=`Ściana ${s.wallNum} (${s.len.toFixed(2)}m)`, tw=ctx.measureText(ws).width; ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(-tw/2-8/finalScale, -15/finalScale, tw+16/finalScale, 30/finalScale); ctx.fillStyle=s.id===selectedWallId?'#ca8a04':'#334155'; ctx.fillText(ws,0,0); ctx.restore();
+                ctx.save(); let oc=s.id===selectedWallId?'#0284c7':'#94a3b8'; ctx.strokeStyle=oc; ctx.fillStyle=oc; ctx.lineWidth=1.5/finalScale; ctx.font='bold '+(22/finalScale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'; (s.len<=2.5?[0.5]:[0.8/s.len, (s.len-0.8)/s.len]).forEach(r=>{ let px=s.p1.x+s.dirX*s.len*r, py=s.p1.y+s.dirY*s.len*r, sx=px+s.nx*s.offset, sy=py+s.ny*s.offset; ctx.beginPath(); ctx.setLineDash([4/finalScale,4/finalScale]); ctx.moveTo(px,py); ctx.lineTo(sx,sy); ctx.stroke(); ctx.setLineDash([]); ctx.beginPath(); ctx.arc(px,py,2.5/finalScale,0,Math.PI*2); ctx.arc(sx,sy,2.5/finalScale,0,Math.PI*2); ctx.fill(); ctx.save(); ctx.translate((px+sx)/2+s.dirX*24/finalScale, (py+sy)/2+s.dirY*24/finalScale); let ao=Math.atan2(s.dirY,s.dirX); if(ao>Math.PI/2||ao<-Math.PI/2)ao+=Math.PI; ctx.rotate(ao); ctx.fillText(s.offset.toFixed(2)+'m',0,0); ctx.restore(); }); ctx.restore();
+            });
+
+            Object.values(scafPathSegs).forEach(s=>{ ctx.beginPath(); ctx.strokeStyle='rgba(203,213,225,0.4)'; ctx.lineWidth=1/finalScale; ctx.moveTo(s.p1.x,s.p1.y); ctx.lineTo(s.p2.x,s.p2.y); ctx.stroke(); });
+
+            allNodes=[]; interactiveDecks=[]; interactiveCols=[]; let uM={}, eM={}, st={c:{},tp:0,tt:0,ib:0,ir:0,cr:0,col:false,bc:false,cb:0,cbl:0};
+            let gON = (x,y,dx,dy,ib,is)=>{ let k=`k_${Math.round(x*100)}_${Math.round(y*100)}`; if(!uM[k]){let n={id:k,x:x,y:y,wallDirX:dx,wallDirY:dy,isInnerBase:false,isSpigot:is}; uM[k]=n; allNodes.push(n);} if(ib)uM[k].isInnerBase=true; if(is)uM[k].isSpigot=true; return uM[k]; };
+            let aE = (n1,n2)=>{ let k=n1.id<n2.id?`${n1.id}|${n2.id}`:`${n2.id}|${n1.id}`; eM[k]={n1:n1,n2:n2,key:k}; };
+
+            walls.filter(w=>w.type==='flat').forEach(w=>{
+                let f=geomWallSegs.find(s=>s.id===w.id); if(!f)return;
+                let cX=f.p1.x+f.nx*w.offset+f.dirX*w.shift, cY=f.p1.y+f.ny*w.offset+f.dirY*w.shift;
+                w.cols.forEach((c,ci)=>{
+                    let sX=cX, sY=cY, eX=sX+f.dirX*c.length, eY=sY+f.dirY*c.length;
+                    let dBay = (dp, di, inw)=>{
+                        let dX=inw?-f.nx:f.nx, dY=inw?-f.ny:f.ny, p1={x:sX,y:sY}, p2={x:eX,y:eY};
+                        if(!inw&&di>0){ let sm=0; for(let i=0;i<di;i++)sm+=c.depths[i]; p1.x+=dX*sm; p1.y+=dY*sm; p2.x+=dX*sm; p2.y+=dY*sm; }
+                        if(inw){ let sm=0; for(let i=0;i<di;i++)sm+=c.inwards[i]; p1.x+=dX*sm; p1.y+=dY*sm; p2.x+=dX*sm; p2.y+=dY*sm; }
+                        let p3={x:p2.x+dX*dp, y:p2.y+dY*dp}, p4={x:p1.x+dX*dp, y:p1.y+dY*dp}, isTr=(!inw&&c.depthsTrapp&&c.depthsTrapp[di])||(inw&&c.inwardsTrapp&&c.inwardsTrapp[di]); if(isTr)st.tt++;
+                        let sel=(w.id===selectedColWallId&&ci===selectedColIdx&&di===selectedColDepthIdx&&inw===selectedColIsInward), cst=c.isCustom&&!inw&&di===0;
+                        let fc=inw?'rgba(245,158,11,0.15)':(di===0?'rgba(2,132,199,0.1)':'rgba(16,185,129,0.1)'), sc=inw?'#d97706':(di===0?'#0284c7':'#059669');
+                        if(cst){fc='rgba(245,158,11,0.2)';sc='#b45309';st.cb++;st.cbl+=c.length;} if(isTr){fc='rgba(139,92,246,0.25)';sc='#8b5cf6';} if(sel){fc='rgba(16,185,129,0.4)';sc='#047857';}
+                        
+                        let cmb=getBoardCombo(dp, cst, (c.boardModes&&c.boardModes[`${inw?'inw':'out'}_${di}`])||'auto'), smW=cmb.reduce((a,b)=>a+b,0), ccD=(dp-smW)/2;
+                        cmb.forEach((bw,bi)=>{
+                            if(!(c.removedBoards&&c.removedBoards[`${inw?'inw':'out'}_${di}_${bi}`])){
+                                let bp1={x:p1.x+dX*ccD,y:p1.y+dY*ccD}, bp2={x:p2.x+dX*ccD,y:p2.y+dY*ccD}, bp3={x:bp2.x+dX*bw,y:bp2.y+dY*bw}, bp4={x:bp1.x+dX*bw,y:bp1.y+dY*bw};
+                                ctx.beginPath(); ctx.moveTo(bp1.x,bp1.y); ctx.lineTo(bp2.x,bp2.y); ctx.lineTo(bp3.x,bp3.y); ctx.lineTo(bp4.x,bp4.y); ctx.closePath(); ctx.fillStyle=fc; ctx.fill();
+                                ctx.beginPath(); ctx.moveTo(p1.x+dX*ccD+f.dirX*0.05, p1.y+dY*ccD+f.dirY*0.05); ctx.lineTo(p2.x+dX*ccD-f.dirX*0.05, p2.y+dY*ccD-f.dirY*0.05); ctx.lineTo(p2.x+dX*ccD-f.dirX*0.05+dX*bw, p2.y+dY*ccD-f.dirY*0.05+dY*bw); ctx.lineTo(p1.x+dX*ccD+f.dirX*0.05+dX*bw, p1.y+dY*ccD+f.dirY*0.05+dY*bw); ctx.closePath();
+                                ctx.strokeStyle=isTr?'rgba(139,92,246,0.6)':inw?'rgba(217,119,6,0.5)':cst?'rgba(180,83,9,0.5)':'rgba(2,132,199,0.5)'; ctx.lineWidth=1.5/finalScale; ctx.stroke();
+                            } ccD+=bw;
+                        });
+
+                        ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.lineTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y); ctx.closePath(); ctx.strokeStyle=sc; ctx.lineWidth=(sel?4:1.5)/finalScale; ctx.stroke();
+                        aE(gON(p1.x,p1.y,-f.nx,-f.ny,!inw&&di===0), gON(p2.x,p2.y,-f.nx,-f.ny,!inw&&di===0)); aE(gON(p2.x,p2.y,-f.nx,-f.ny,false), gON(p3.x,p3.y,-f.nx,-f.ny,false)); aE(gON(p3.x,p3.y,-f.nx,-f.ny,false), gON(p4.x,p4.y,-f.nx,-f.ny,false)); aE(gON(p4.x,p4.y,-f.nx,-f.ny,false), gON(p1.x,p1.y,-f.nx,-f.ny,false));
+                        interactiveCols.push({wallId:w.id, cIdx:ci, dIdx:di, isInward:inw, poly:[p1,p2,p3,p4]});
+
+                        ctx.fillStyle=isTr?'#4c1d95':sel?'#064e3b':cst?'#78350f':'#0f172a'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                        ctx.save(); ctx.translate((p1.x+p2.x+p3.x+p4.x)/4, (p1.y+p2.y+p3.y+p4.y)/4); let a=Math.atan2(p2.y-p1.y, p2.x-p1.x); if(a>Math.PI/2||a<-Math.PI/2)a+=Math.PI; ctx.rotate(a);
+                        let l1="", l2=""; if(isTr){l1='TRAPP';l2=di===0?`${c.length.toFixed(2)}×${dp.toFixed(2)}m`:`${dp.toFixed(2)}m`;}else if(inw){l1='Wnęka';l2=`${dp.toFixed(2)}m`;}else if(di===0){l1=cst?'Deska/Przerzut':`${c.length.toFixed(2)}×${dp.toFixed(2)}m`;l2=cst?`${c.length.toFixed(2)}×${dp.toFixed(2)}m`:'';}else{l1=`+${dp.toFixed(2)}m`;}
+                        if(finalScale>15){ ctx.beginPath(); ctx.rect(-c.length/2,-dp/2,c.length,dp); ctx.clip(); let v=dp>c.length; if(v)ctx.rotate(-Math.PI/2); let aw=v?dp:c.length; if(aw<0.6){l1=l1.includes('Deska')?'Deska':l1.includes('Wnęka')?'W':l1.split(' ')[0];} let fs=24/finalScale; ctx.font=`bold ${fs}px Inter`; if(Math.max(ctx.measureText(l1).width,l2?ctx.measureText(l2).width:0)>aw*0.9){fs=16/finalScale;ctx.font=`bold ${fs}px Inter`;} if(l2){ctx.fillText(l1,0,-fs*0.5);ctx.fillText(l2,0,fs*0.5);}else ctx.fillText(l1,0,0); } ctx.restore();
+                    };
+
+                    c.depths.forEach((d,i)=>dBay(d,i,false)); if(c.inwards)c.inwards.forEach((d,i)=>{dBay(d,i,true);st.ib++;});
+                    if(w.offset>0.25){ctx.beginPath(); ctx.moveTo(sX,sY); ctx.lineTo(eX,eY); ctx.strokeStyle='#ef4444'; ctx.lineWidth=3/finalScale; ctx.stroke(); st.ir+=2;}
+                    cX=eX; cY=eY;
+                });
+            });
+
+            let gCD=0; if(window.__HAKI_VIEWER_MODE__){if(window.__HAKI_INJECTED_DATA__&&window.__HAKI_INJECTED_DATA__.globalConsoleDepth!==undefined)gCD=window.__HAKI_INJECTED_DATA__.globalConsoleDepth;}else{let ci=document.getElementById('inp-console-depth');if(ci)gCD=parseFloat(ci.value)||0;}
+            allNodes.forEach(n=>{ n.finalConsoles={N:0,S:0,E:0,W:0}; let wd=getDirKey(n.wallDirX,n.wallDirY), dw=getDistToWall(n,{x:n.wallDirX,y:n.wallDirY}); ['N','S','E','W'].forEach(d=>{let m=(nodeConsoles[n.id]||{})[d]; n.finalConsoles[d]=(m!==undefined&&m!==-1)?m:(n.isInnerBase&&d===wd&&dw>0.1)?gCD:0;}); });
+            allNodes.slice().forEach(n=>{ ['N','S','E','W'].forEach(d=>{let dp=n.finalConsoles[d]; if(dp>=0.56) gON(n.x+dirVec[d].x*dp, n.y+dirVec[d].y*dp, n.wallDirX, n.wallDirY, false, true); }); });
+            Object.values(eM).forEach(e=>{ ['N','S','E','W'].forEach(d=>{let c1=e.n1.finalConsoles[d], c2=e.n2.finalConsoles[d]; if(c1>0&&c2>0){aE(gON(e.n1.x+dirVec[d].x*c1, e.n1.y+dirVec[d].y*c1, e.n1.wallDirX, e.n1.wallDirY, false, c1>=0.56), gON(e.n2.x+dirVec[d].x*c2, e.n2.y+dirVec[d].y*c2, e.n2.wallDirX, e.n2.wallDirY, false, c2>=0.56));} }); });
+            allNodes.forEach(n=>{ if(!n.finalConsoles){ n.finalConsoles={N:0,S:0,E:0,W:0}; ['N','S','E','W'].forEach(d=>{let m=(nodeConsoles[n.id]||{})[d]; if(m!==undefined&&m!==-1)n.finalConsoles[d]=m;}); } });
+
+            Object.values(eM).forEach(e=>{
+                let cDk = (d)=>{
+                    let c1=e.n1.finalConsoles[d], c2=e.n2.finalConsoles[d];
+                    if(c1>0&&c2>0){
+                        let mxD=Math.min(c1,c2), dk=`deck_${e.key}_${d}`, aD=mxD; if(bayDecks[dk]!==undefined&&bayDecks[dk]!==-1)aD=Math.min(bayDecks[dk],mxD);
+                        let vec=dirVec[d], fL=Math.hypot(e.n1.x-e.n2.x, e.n1.y-e.n2.y), dx=(e.n2.x-e.n1.x)/fL, dy=(e.n2.y-e.n1.y)/fL, cuD=bayDeckLengths[dk], isS=(cuD&&Array.isArray(cuD)&&cuD.length>0);
+                        let pD = (o, al, isC)=>{
+                            let dp1={x:e.n1.x+dx*o, y:e.n1.y+dy*o}, dp2={x:dp1.x+dx*al, y:dp1.y+dy*al}, p3={x:dp2.x+vec.x*aD, y:dp2.y+vec.y*aD}, p4={x:dp1.x+vec.x*aD, y:dp1.y+vec.y*aD};
+                            interactiveDecks.push({id:dk, p1:dp1, p2:dp2, p3:p3, p4:p4, w:al, fullW:fL, h:aD, dir:d});
+                            if(aD>0){
+                                let hc=getDistToWall(e.n1,vec)<aD-0.01 || getDistToWall(e.n2,vec)<aD-0.01; if(hc)st.col=true;
+                                let fc=isC?(hc?'rgba(239,68,68,0.5)':'rgba(180,83,9,0.2)'):(hc?'rgba(239,68,68,0.4)':'rgba(245,158,11,0.5)'), sc=isC?(hc?'#dc2626':'#92400e'):(hc?'#dc2626':'#d97706'), tc=hc?'#ffffff':(isC?'#451a03':'#78350f');
+                                if(isC){st.cb++; st.cbl+=al;}
+                                ctx.beginPath(); ctx.moveTo(dp1.x,dp1.y); ctx.lineTo(dp2.x,dp2.y); ctx.lineTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y); ctx.closePath(); ctx.fillStyle=fc; ctx.fill();
+                                let cmb=getBoardCombo(aD, isC), smW=cmb.reduce((a,b)=>a+b,0), ccD=(aD-smW)/2;
+                                ctx.beginPath(); cmb.forEach(bw=>{ let i1x=dp1.x+vec.x*ccD+dx*0.05, i1y=dp1.y+vec.y*ccD+dy*0.05, i2x=dp2.x+vec.x*ccD-dx*0.05, i2y=dp2.y+vec.y*ccD-dy*0.05; ctx.moveTo(i1x,i1y); ctx.lineTo(i2x,i2y); ctx.lineTo(i2x+vec.x*bw,i2y+vec.y*bw); ctx.lineTo(i1x+vec.x*bw,i1y+vec.y*bw); ctx.closePath(); ccD+=bw; });
+                                ctx.strokeStyle=hc?'rgba(255,255,255,0.6)':isC?'rgba(180,83,9,0.5)':'rgba(245,158,11,0.5)'; ctx.lineWidth=1.5/finalScale; ctx.stroke();
+                                ctx.beginPath(); ctx.moveTo(dp1.x,dp1.y); ctx.lineTo(dp2.x,dp2.y); ctx.lineTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y); ctx.closePath(); ctx.strokeStyle=sc; ctx.lineWidth=1/finalScale; ctx.stroke();
+                                ctx.fillStyle=tc; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.save(); ctx.translate((dp1.x+dp2.x+p3.x+p4.x)/4, (dp1.y+dp2.y+p3.y+p4.y)/4); let a=Math.atan2(dp2.y-dp1.y, dp2.x-dp1.x); if(a>Math.PI/2||a<-Math.PI/2)a+=Math.PI; ctx.rotate(a);
+                                if(finalScale>15){ ctx.beginPath(); ctx.rect(-al/2,-aD/2,al,aD); ctx.clip(); let v=aD>al; if(v)ctx.rotate(-Math.PI/2); let aw=v?aD:al, l1=isC?"Deska":"Konsola", l2=`${al.toFixed(2)}×${aD.toFixed(2)}m`; if(aw<0.6)l1=isC?"D":"K"; let fs=24/finalScale; ctx.font=`bold ${fs}px Inter`; if(Math.max(ctx.measureText(l1).width,ctx.measureText(l2).width)>aw*0.9){fs=16/finalScale; ctx.font=`bold ${fs}px Inter`;} ctx.fillText(l1,0,-fs*0.5); ctx.fillText(l2,0,fs*0.5); } ctx.restore();
+                                if(!isC) st.tp+=(aD>=0.70?3:aD>=0.40?2:1); if(getDistToWall(p4,vec)>0.25 || getDistToWall(p3,vec)>0.25){ st.cr+=2; if(![0.77,0.70,0.56,0.50].includes(c1)||![0.77,0.70,0.56,0.50].includes(c2))st.bc=true; ctx.beginPath(); ctx.moveTo(p4.x,p4.y); ctx.lineTo(p3.x,p3.y); ctx.strokeStyle='#ef4444'; ctx.lineWidth=3/finalScale; ctx.stroke(); }
+                            }
+                        };
+                        if(isS){ cuD.forEach(s=>{let o=Math.max(0,Math.min(s.off,fL-0.05)), al=Math.max(0.05,Math.min(s.len,fL-o)); pD(o,al,s.isCustom);}); } else pD(0,fL,false);
+                    }
+                };
+                if(Math.abs(e.n1.y-e.n2.y)<0.05){cDk('N');cDk('S');} if(Math.abs(e.n1.x-e.n2.x)<0.05){cDk('E');cDk('W');}
+            });
+
+            allNodes.forEach(n=>{
+                ['N','S','E','W'].forEach(d=>{ let dp=n.finalConsoles[d]; if(dp>0){ let v=dirVec[d], t={x:n.x+v.x*dp, y:n.y+v.y*dp}, hc=dp>getDistToWall(n,v)+0.01; if(hc)st.col=true; ctx.beginPath(); ctx.moveTo(n.x,n.y); ctx.lineTo(t.x,t.y); ctx.strokeStyle=hc?'#dc2626':'#b45309'; ctx.lineWidth=3/finalScale; ctx.stroke(); st.c[dp]=(st.c[dp]||0)+1; let isS=dp>=0.56; ctx.beginPath(); ctx.arc(t.x,t.y,(isS?12:8)/finalScale,0,Math.PI*2); ctx.fillStyle=isS?'rgba(2,132,199,0.4)':'rgba(245,158,11,0.3)'; ctx.fill(); ctx.beginPath(); ctx.arc(t.x,t.y,(isS?5:3.5)/finalScale,0,Math.PI*2); ctx.fillStyle=isS?'#0284c7':'#0f172a'; ctx.fill(); } });
+                let s=(n.id===selectedNodeId), sp=!!n.isSpigot; ctx.beginPath(); ctx.arc(n.x,n.y,(s?14:sp?11:10)/finalScale,0,Math.PI*2); ctx.fillStyle=s?'rgba(239,68,68,0.4)':sp?'rgba(2,132,199,0.4)':'rgba(2,132,199,0.3)'; ctx.fill(); ctx.beginPath(); ctx.arc(n.x,n.y,(s?6:sp?5:4)/finalScale,0,Math.PI*2); ctx.fillStyle=s?'#dc2626':sp?'#0284c7':'#0f172a'; ctx.fill();
+            });
+
+            freeDecks.forEach(f=>{
+                ctx.save(); ctx.translate(f.cx,f.cy); ctx.rotate(f.angle); let s=(f.id===selectedFreeDeckId), w=(f.type==='wood'), fc=s?'rgba(16,185,129,0.5)':w?'rgba(180,83,9,0.4)':'rgba(2,132,199,0.3)', sc=s?'#047857':w?'#92400e':'#0284c7';
+                ctx.beginPath(); ctx.rect(-f.w/2,-f.d/2,f.w,f.d); ctx.fillStyle=fc; ctx.fill();
+                let cmb=getBoardCombo(f.d,w), cd=(f.d-cmb.reduce((a,b)=>a+b,0))/2;
+                ctx.beginPath(); cmb.forEach(bw=>{let ty=-f.d/2+cd, by=ty+bw; ctx.moveTo(-f.w/2+0.05,ty); ctx.lineTo(f.w/2-0.05,ty); ctx.lineTo(f.w/2-0.05,by); ctx.lineTo(-f.w/2+0.05,by); ctx.closePath(); cd+=bw;});
+                ctx.strokeStyle=s?'rgba(16,185,129,0.6)':w?'rgba(180,83,9,0.5)':'rgba(2,132,199,0.5)'; ctx.lineWidth=1.5/finalScale; ctx.stroke();
+                ctx.beginPath(); ctx.rect(-f.w/2,-f.d/2,f.w,f.d); ctx.strokeStyle=sc; ctx.lineWidth=(s?3:1.5)/finalScale; ctx.stroke();
+                let ta=f.angle%(Math.PI*2); if(ta<0)ta+=Math.PI*2; if(ta>Math.PI/2&&ta<3*Math.PI/2)ctx.rotate(Math.PI);
+                if(finalScale>15){ ctx.beginPath(); ctx.rect(-f.w/2,-f.d/2,f.w,f.d); ctx.clip(); let v=f.d>f.w; if(v)ctx.rotate(-Math.PI/2); let aw=v?f.d:f.w, l1=w?'Deska/Przerzut':'Blat systemowy', l2=`${f.w.toFixed(2)}×${f.d.toFixed(2)}m`; if(aw<0.6)l1=w?'Deska':'System'; let fs=24/finalScale; ctx.font=`bold ${fs}px Inter`; if(Math.max(ctx.measureText(l1).width,ctx.measureText(l2).width)>aw*0.9){fs=16/finalScale; ctx.font=`bold ${fs}px Inter`;} ctx.fillStyle=s?'#064e3b':w?'#451a03':'#0f172a'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(l1,0,-fs*0.5); ctx.fillText(l2,0,fs*0.5); } ctx.restore();
+            });
+
+            if (isDrawWallMode) {
+                if (currentSnapPoint) {
+                    ctx.beginPath(); ctx.arc(currentSnapPoint.x, currentSnapPoint.y, 6/finalScale, 0, Math.PI*2); ctx.fillStyle=currentSnapPoint.isVertexSnap?'#ef4444':'#10b981'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(currentSnapPoint.x, currentSnapPoint.y, 12/finalScale, 0, Math.PI*2); ctx.strokeStyle=currentSnapPoint.isVertexSnap?'rgba(239,68,68,0.4)':'rgba(16,185,129,0.4)'; ctx.lineWidth=2/finalScale; ctx.stroke();
+                }
+                if (drawState === 1 && drawStartPoint) {
+                    ctx.beginPath(); ctx.arc(drawStartPoint.x, drawStartPoint.y, 7/finalScale, 0, Math.PI*2); ctx.fillStyle='#0284c7'; ctx.fill();
+                    if (currentSnapPoint) {
+                        ctx.beginPath(); ctx.setLineDash([8/finalScale, 4/finalScale]); ctx.moveTo(drawStartPoint.x, drawStartPoint.y); ctx.lineTo(currentSnapPoint.x, currentSnapPoint.y); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=5/finalScale; ctx.stroke(); ctx.setLineDash([]);
+                        let l=Math.hypot(currentSnapPoint.x-drawStartPoint.x, currentSnapPoint.y-drawStartPoint.y); 
+                        if(l>0.05){ ctx.save(); ctx.translate((drawStartPoint.x+currentSnapPoint.x)/2, (drawStartPoint.y+currentSnapPoint.y)/2-25/finalScale); ctx.font='bold '+(24/finalScale)+'px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'; let ts=l.toFixed(2)+'m', tw=ctx.measureText(ts).width; ctx.fillStyle='#f59e0b'; ctx.fillRect(-tw/2-6/finalScale,-14/finalScale,tw+12/finalScale,28/finalScale); ctx.fillStyle='white'; ctx.fillText(ts,0,0); ctx.restore(); }
+                    }
+                }
+            }
+
+            if (!window.__HAKI_VIEWER_MODE__) {
+                const wP=document.getElementById('warning-panel'), wM=document.getElementById('warning-msg');
+                if(st.col||st.bc){ if(wP)wP.style.display='block'; if(wM){wM.style.display='block'; wM.innerHTML=st.col?`<strong>KOLIZJA!</strong> Konstrukcja uderza w budynek!`:`<strong>OSTRZEŻENIE:</strong> Szczelina >25cm, konsole bez pinów!`;} }else{ if(wP)wP.style.display='none'; if(wM)wM.style.display='none'; }
+            }
+        }
+
+        function checkUpdate() {
+            if (window.__HAKI_VIEWER_MODE__) return;
+            const lastVersion = localStorage.getItem('scaffcad_version');
+            if (lastVersion !== CURRENT_VERSION) {
+                document.getElementById('update-modal').style.display = 'flex';
+            }
+        }
+
+        function closeUpdateModal() {
+            localStorage.setItem('scaffcad_version', CURRENT_VERSION);
+            document.getElementById('update-modal').style.display = 'none';
+        }
+
+        // --- OBSŁUGA KONSOL I WĘZŁÓW ---
+        function selectConsoleDir(dir) {
+            currentConsoleDir = dir;
+            ['N', 'S', 'E', 'W'].forEach(d => {
+                let btn = document.getElementById('dir-btn-' + d);
+                if (btn) {
+                    if (d === dir) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
+            });
+        }
+
+        function setConsole(depth) {
+            if (selectedNodeId) {
+                if (!nodeConsoles[selectedNodeId]) nodeConsoles[selectedNodeId] = {};
+                nodeConsoles[selectedNodeId][currentConsoleDir] = depth;
+                document.getElementById('console-menu').style.display = 'none'; 
+                reqDraw();
+            }
+        }
+
+        // --- OBSŁUGA BLATÓW SYSTEMOWYCH I DESEK ---
+        function setDeck(depth) {
+            if (selectedBayId) {
+                bayDecks[selectedBayId] = depth;
+                document.getElementById('deck-menu').style.display = 'none'; 
+                reqDraw();
+            }
+        }
+
+        function renderSubDecksUI() {
+            let ui = document.getElementById('sub-decks-list');
+            if (!ui) return;
+            ui.innerHTML = '';
+            let subs = bayDeckLengths[selectedBayId];
+            if (!subs || subs.length === 0) {
+                ui.innerHTML = '<span style="font-size:0.8rem; color:#94a3b8;">Brak wstawek.</span>';
+                return;
+            }
+            subs.forEach((s) => {
+                let type = s.isCustom ? '🪵 Deska' : '🔧 System';
+                ui.innerHTML += `<div style="background:#fffbeb; border:1px solid #fcd34d; padding:6px; border-radius:4px; font-size:0.8rem; display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span>${type}: ${s.len.toFixed(2)}m (od: ${s.off.toFixed(2)}m)</span>
+                </div>`;
+            });
+        }
+
+        function addSubDeck(isCustom) {
+            if (!selectedBayId) return;
+            let val = parseFloat(document.getElementById('inp-deck-sub-len').value.replace(',', '.'));
+            if (isNaN(val) || val <= 0) {
+                uiAlert("Podaj prawidłową długość wstawki!");
+                return;
+            }
+            
+            if (!bayDeckLengths[selectedBayId]) bayDeckLengths[selectedBayId] = [];
+            let currentSubs = bayDeckLengths[selectedBayId];
+            let offset = 0;
+            if (currentSubs.length > 0) {
+                let last = currentSubs[currentSubs.length - 1];
+                offset = last.off + last.len;
+            }
+            currentSubs.push({ len: val, off: offset, isCustom: isCustom });
+            document.getElementById('inp-deck-sub-len').value = '';
+            renderSubDecksUI();
+            reqDraw();
+        }
+
+        function resetSubDecks() {
+            if (selectedBayId) {
+                bayDeckLengths[selectedBayId] = [];
+                renderSubDecksUI();
+                reqDraw();
+            }
+        }
+
+        // --- OBSŁUGA MENU EDYCJI POLA (col-menu) ---
+        function setColLength(len) {
+            if (selectedColWallId && selectedColIdx !== null) {
+                let w = getWall(selectedColWallId);
+                if (w && w.cols[selectedColIdx]) {
+                    w.cols[selectedColIdx].length = len;
+                    w.cols[selectedColIdx].isCustom = false;
+                    updateEditorUI();
+                    reqDraw();
+                }
+            }
+        }
+
+        function toggleAllBoardsInSegment() {
+            if (selectedColWallId && selectedColIdx !== null) {
+                let w = getWall(selectedColWallId);
+                let col = w.cols[selectedColIdx];
+                if (!col.removedBoards) col.removedBoards = {};
+
+                let depth = selectedColIsInward ? col.inwards[selectedColDepthIdx] : col.depths[selectedColDepthIdx];
+                let dKey = `${selectedColIsInward ? 'inw' : 'out'}_${selectedColDepthIdx}`;
+                let pref = (col.boardModes && col.boardModes[dKey]) || (col.boardModes && col.boardModes['all']) || 'auto';
+                let combo = getBoardCombo(depth, (!selectedColIsInward && selectedColDepthIdx === 0 && col.isCustom), pref);
+
+                let allRemoved = combo.length > 0 && combo.every((_, bIdx) => col.removedBoards[`${dKey}_${bIdx}`]);
+
+                combo.forEach((_, bIdx) => {
+                    let key = `${dKey}_${bIdx}`;
+                    if (allRemoved) {
+                        delete col.removedBoards[key];
+                    } else {
+                        col.removedBoards[key] = true;
+                    }
+                });
+
+                populateColMenu();
+                reqDraw();
+            }
+        }
+
+        function closeColMenu() {
+            document.getElementById('col-menu').style.display = 'none';
+            selectedColWallId = null;
+            selectedColIdx = null;
+            updateEditorUI();
+            reqDraw();
+        }
+        
+        // --- OBSŁUGA ZMIANY SZEROKOŚCI BLACH I UKRYWANIA ---
+        function setBayBoardWidth(widthMode) {
+            if (selectedColWallId && selectedColIdx !== null) {
+                let w = getWall(selectedColWallId);
+                let col = w.cols[selectedColIdx];
+                if (!col.boardModes) col.boardModes = {};
+                let dKey = `${selectedColIsInward ? 'inw' : 'out'}_${selectedColDepthIdx}`;
+                col.boardModes[dKey] = widthMode;
+                
+                if (col.removedBoards) {
+                    Object.keys(col.removedBoards).forEach(k => {
+                        if (k.startsWith(dKey + '_')) delete col.removedBoards[k];
+                    });
+                }
+                
+                populateColMenu();
+                reqDraw();
+            }
+        }
+
+        function populateColMenu() {
+            let ui = document.getElementById('col-boards-list');
+            if (!ui) return;
+            ui.innerHTML = '';
+            
+            if (selectedColWallId && selectedColIdx !== null) {
+                let w = getWall(selectedColWallId);
+                let col = w.cols[selectedColIdx];
+                if (!col.removedBoards) col.removedBoards = {};
+                if (!col.boardModes) col.boardModes = {};
+
+                let dKey = `${selectedColIsInward ? 'inw' : 'out'}_${selectedColDepthIdx}`;
+                let currentPref = col.boardModes[dKey] || 'auto';
+
+                let segName = selectedColIsInward 
+                    ? `Wnęka (${col.inwards[selectedColDepthIdx].toFixed(2)}m)` 
+                    : (selectedColDepthIdx === 0 ? `Baza (${col.depths[0].toFixed(2)}m)` : `+Wszerz (${col.depths[selectedColDepthIdx].toFixed(2)}m)`);
+                
+                document.getElementById('col-menu-title').innerHTML = `Edytuj: <b>${segName}</b> (Dł: ${col.length.toFixed(2)}m)`;
+
+                ['auto', 0.32, 0.23, 0.20].forEach(m => {
+                    let btnId = m === 'auto' ? 'btn-bw-auto' : (m === 0.32 ? 'btn-bw-032' : (m === 0.23 ? 'btn-bw-023' : 'btn-bw-020'));
+                    let btn = document.getElementById(btnId);
+                    if (btn) {
+                        if (currentPref === m) btn.classList.add('active');
+                        else btn.classList.remove('active');
+                    }
+                });
+
+                let btnToggleAll = document.getElementById('btn-toggle-all-boards');
+                if (btnToggleAll) {
+                    let curDepth = selectedColIsInward ? col.inwards[selectedColDepthIdx] : col.depths[selectedColDepthIdx];
+                    let curCombo = getBoardCombo(curDepth, (!selectedColIsInward && selectedColDepthIdx === 0 && col.isCustom), currentPref);
+                    let allRemoved = curCombo.length > 0 && curCombo.every((_, bIdx) => col.removedBoards[`${dKey}_${bIdx}`]);
+
+                    if (allRemoved) {
+                        btnToggleAll.innerHTML = "👁️ Przywróć wszystkie blachy na tym polu";
+                        btnToggleAll.style.background = "#f0fdf4";
+                        btnToggleAll.style.color = "#166534";
+                        btnToggleAll.style.borderColor = "#86efac";
+                    } else {
+                        btnToggleAll.innerHTML = "🚫 Usuń wszystkie blachy (Dziura w polu)";
+                        btnToggleAll.style.background = "#fef2f2";
+                        btnToggleAll.style.color = "#dc2626";
+                        btnToggleAll.style.borderColor = "#fecaca";
+                    }
+                }
+
+                let renderDepthBoards = (depth, dIdx, isInward) => {
+                    let isCurrentSegment = (isInward === selectedColIsInward && dIdx === selectedColDepthIdx);
+                    let segDKey = `${isInward ? 'inw' : 'out'}_${dIdx}`;
+                    let pref = col.boardModes[segDKey] || 'auto';
+                    let combo = getBoardCombo(depth, (!isInward && dIdx === 0 && col.isCustom), pref);
+                    let prefix = isInward ? `Wnęka ${depth.toFixed(2)}m` : (dIdx === 0 ? `Baza ${depth.toFixed(2)}m` : `+Wszerz ${depth.toFixed(2)}m`);
+                    
+                    let bgContainer = isCurrentSegment ? '#f0fdf4' : '#f8fafc';
+                    let borderCol = isCurrentSegment ? '#86efac' : '#e2e8f0';
+
+                    let sectionHtml = `<div style="background:${bgContainer}; border:1px solid ${borderCol}; padding:8px; border-radius:8px; margin-bottom:6px;">
+                        <div style="font-weight:700; color:#0f172a; font-size:0.8rem; margin-bottom:6px; display:flex; justify-content:space-between;">
+                            <span>${prefix} ${isCurrentSegment ? '<b style="color:#10b981;">(Wybrany)</b>' : ''}</span>
+                            <span style="font-size:0.75rem; color:#64748b;">Blachy: ${combo.length} szt.</span>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">`;
+
+                    combo.forEach((bw, bIdx) => {
+                        let key = `${isInward ? 'inw' : 'out'}_${dIdx}_${bIdx}`;
+                        let isRemoved = col.removedBoards[key];
+                        let btnText = isRemoved ? `👁️ Pokaż (${bw.toFixed(2)}m)` : `🚫 Usuń (${bw.toFixed(2)}m)`;
+                        let btnColor = isRemoved ? '#10b981' : '#ef4444';
+                        let bgCol = isRemoved ? '#ecfdf5' : '#fef2f2';
+                        
+                        sectionHtml += `<div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.75rem;">
+                            <span style="font-weight: 600; color: #334155;">Blacha ${bIdx + 1} (${bw.toFixed(2)}m)</span>
+                            <button onclick="toggleBoardRemoval('${key}')" style="background: ${bgCol}; color: ${btnColor}; border: 1px solid ${btnColor}; padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">${btnText}</button>
+                        </div>`;
+                    });
+
+                    sectionHtml += `</div></div>`;
+                    ui.innerHTML += sectionHtml;
+                };
+                
+                col.depths.forEach((d, i) => renderDepthBoards(d, i, false));
+                if (col.inwards) col.inwards.forEach((d, i) => renderDepthBoards(d, i, true));
+            }
+        }
+
+        function toggleBoardRemoval(key) {
+            if (selectedColWallId && selectedColIdx !== null) {
+                let w = getWall(selectedColWallId);
+                let col = w.cols[selectedColIdx];
+                if (!col.removedBoards) col.removedBoards = {};
+                col.removedBoards[key] = !col.removedBoards[key];
+                populateColMenu(); 
+                reqDraw();
+            }
+        }
+
+        // --- ZAMYKANIE WSZYSTKICH MENU PO KLIKNIĘCIU W TŁO ---
+        function hideMenu(e) {
+            if (e && e.target && e.target.closest && e.target.closest('.float-menu')) return;
+            document.querySelectorAll('.float-menu').forEach(m => m.style.display = 'none');
+        }
+
+        window.onload = () => { 
+            if (window.__HAKI_INJECTED_DATA__) {
+                const data = window.__HAKI_INJECTED_DATA__;
+                if (data.walls) walls = data.walls;
+                if (data.wallIdCounter) wallIdCounter = data.wallIdCounter;
+                if (data.nodeConsoles) nodeConsoles = data.nodeConsoles;
+                if (data.bayDecks) bayDecks = data.bayDecks;
+                if (data.bayDeckLengths) bayDeckLengths = data.bayDeckLengths;
+                if (data.freeDecks) freeDecks = data.freeDecks;
+                if (data.freeDeckCounter) freeDeckCounter = data.freeDeckCounter;
+            } else { loadProject(); }
+
+            if (window.__HAKI_VIEWER_MODE__) {
+                document.body.innerHTML = ''; 
+                let container = document.createElement('div');
+                container.style.position = 'fixed'; 
+                container.style.top = '0'; 
+                container.style.left = '0'; 
+                container.style.width = '100vw'; 
+                container.style.height = '100vh'; 
+                container.style.height = '100dvh'; 
+                container.style.background = '#f1f5f9'; 
+                container.style.zIndex = '99999'; 
+                
+                let info = document.createElement('div');
+                info.innerHTML = '🔎 <b>Tryb Podglądu:</b> Rysunek 1:1. Przybliżaj (2 palce / rolka) i przesuwaj swobodnie.';
+                info.style.position = 'absolute'; 
+                info.style.top = '15px'; 
+                info.style.left = '15px'; 
+                info.style.right = '15px'; 
+                info.style.background = 'rgba(255,255,255,0.95)'; 
+                info.style.padding = '12px'; 
+                info.style.borderRadius = '8px'; 
+                info.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'; 
+                info.style.border = '1px solid #cbd5e1'; 
+                info.style.zIndex = '10'; 
+                info.style.fontSize = '0.9rem'; 
+                info.style.color = '#0284c7'; 
+                info.style.textAlign = 'center';
+                
+                let btnCenter = document.createElement('button');
+                btnCenter.innerHTML = '🔍 Centruj'; 
+                btnCenter.style.position = 'absolute'; 
+                btnCenter.style.bottom = '20px'; 
+                btnCenter.style.right = '20px'; 
+                btnCenter.style.zIndex = '10'; 
+                btnCenter.style.padding = '12px 24px'; 
+                btnCenter.style.background = 'white'; 
+                btnCenter.style.border = '1px solid #cbd5e1'; 
+                btnCenter.style.borderRadius = '30px'; 
+                btnCenter.style.fontWeight = 'bold'; 
+                btnCenter.style.fontSize = '1rem'; 
+                btnCenter.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'; 
+                btnCenter.style.color = '#0f172a';
+                btnCenter.style.cursor = 'pointer';
+                btnCenter.onclick = resetView;
+
+                let newCanvas = document.createElement('canvas'); 
+                newCanvas.id = 'canvas2d'; 
+                newCanvas.style.width = '100%'; 
+                newCanvas.style.height = '100%'; 
+                newCanvas.style.cursor = 'grab';
+                
+                container.appendChild(info); 
+                container.appendChild(btnCenter); 
+                container.appendChild(newCanvas); 
+                document.body.appendChild(container);
+                canvas = newCanvas; 
+                ctx = canvas.getContext('2d');
+            } else {
+                checkUpdate();
+            }
+            attachCanvasListeners(); 
+            initCanvas(); 
+            window.addEventListener('resize', initCanvas); 
+        };
+    </script>
+</body>
+</html>
