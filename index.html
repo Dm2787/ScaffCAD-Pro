@@ -70,6 +70,8 @@
         @media (max-width: 1100px) { body { padding: 8px; gap: 10px; } .grid { display: flex; flex-direction: column; } .right-column { order: -1; } .canvas-container { height: 65vh; min-height: 350px; } }
         @media (max-height: 650px) and (orientation: landscape) { body { padding: 0 !important; gap: 0 !important; background: #f1f5f9; overflow: hidden; } .header, .left-column, #editor-panel { display: none !important; } .grid { display: block !important; } .right-column { padding: 0; width: 100vw; height: 100vh; height: 100dvh; } .right-column .panel { padding: 0 !important; border: none; height: 100%; } .canvas-container { height: 100% !important; border-radius: 0; } #info-box { display: none !important; } .canvas-actions, #draw-mode-ui { bottom: 20px !important; } }
     </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0ea5e9">
 </head>
 <body onclick="hideMenu(event)">
 
@@ -1267,5 +1269,14 @@ function showFloatMenu(m,e) { if(window.__HAKI_VIEWER_MODE__)return; if(e)e.stop
             window.addEventListener('resize', initCanvas); 
         };
     </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW zarejestrowany!', reg))
+        .catch(err => console.error('Błąd rejestracji SW', err));
+    });
+  }
+</script>
 </body>
 </html>
